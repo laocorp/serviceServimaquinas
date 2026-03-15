@@ -57,4 +57,7 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
+# Directorio de imágenes — montar como volumen en Dokploy para persistencia
+VOLUME ["/app/public/uploads"]
+
 CMD ["node", "server.js"]

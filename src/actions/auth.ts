@@ -48,7 +48,8 @@ export async function registerAction(formData: FormData) {
 
 export async function loginAction(formData: FormData) {
     try {
-        await signIn("credentials", formData);
+        const credentials = Object.fromEntries(formData);
+        await signIn("credentials", credentials);
     } catch (error) {
         if (error instanceof AuthError) {
             switch (error.type) {

@@ -1,0 +1,32 @@
+# Dependencias
+node_modules
+npm-debug.log
+
+# Entorno
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build artifacts
+.next
+out
+build
+
+# Dev files
+.git
+.gitignore
+README.md
+*.tsbuildinfo
+ts_errors.txt
+prisma_error.txt
+log.txt
+db.json
+db.txt
+fix-env.js
+setup-db.js
+
+# Editor
+.DS_Store
+.vscode

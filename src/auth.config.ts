@@ -23,5 +23,6 @@ export const authConfig = {
     providers: [], // Agregados en auth.ts para evitar importar Prisma en Edge
     session: {
         strategy: "jwt",
-    }
+    },
+    trustHost: true,
 } satisfies NextAuthConfig;

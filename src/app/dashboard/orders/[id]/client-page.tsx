@@ -406,7 +406,7 @@ export default function OrderDetailClient({
                         </div>
                         <div className="flex flex-col items-center gap-2">
                             <p className="text-xs font-bold text-gray-500">Escanea para rastrear tu orden:</p>
-                            <QRCode value={`${settings?.publicUrl || "https://servimaquinas.com"}/rastreo?code=${order.trackingCode}`} size={120} />
+                            <QRCode value={`${settings?.publicUrl || "https://servimaquinas.com"}/track/${order.trackingCode}`} size={120} />
                             <p className="text-xs font-bold">{order.trackingCode}</p>
                         </div>
                     </div>

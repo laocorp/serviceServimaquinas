@@ -2,12 +2,12 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useTransition, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { loginAction, registerAction } from "@/actions/auth";
 import { toast } from "sonner";
 
-export default function LoginPage() {
+function LoginContent() {
     const searchParams = useSearchParams();
     const [isRegister, setIsRegister] = useState(false);
     const [isPending, startTransition] = useTransition();
@@ -335,5 +335,20 @@ export default function LoginPage() {
                 </motion.div>
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-[#06111F]">
+                <div className="animate-pulse flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-blue-500/20 border border-blue-500/40" />
+                    <p className="text-blue-400 text-xs font-semibold uppercase tracking-widest">Cargando acceso...</p>
+                </div>
+            </div>
+        }>
+            <LoginContent />
+        </Suspense>
     );
 }

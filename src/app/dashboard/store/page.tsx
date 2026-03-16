@@ -53,7 +53,7 @@ export default async function StoreManagementPage() {
                         <Link href="/dashboard/store/new" className="text-[#0073CF] font-bold mt-2 inline-block hover:underline">Empieza por añadir el primero</Link>
                     </div>
                 ) : (
-                    products.map((product) => (
+                    products.map((product: any) => (
                         <div key={product.id} className="group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all">
                             <div className="aspect-square bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
                                 {product.image ? (

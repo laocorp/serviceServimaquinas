@@ -7,6 +7,7 @@ import { updateOrderStatus, addInventoryItemToOrder, createWorkReport } from "@/
 import { useReactToPrint } from "react-to-print";
 import QRCode from "react-qr-code";
 import ImageUpload from "@/components/forms/ImageUpload";
+import { Users, ClipboardList } from "lucide-react";
 
 const STATUS_COLORS: any = {
     PENDIENTE: "bg-slate-100 text-slate-700",
@@ -38,9 +39,9 @@ export default function OrderDetailClient({
     const [selectedStatus, setSelectedStatus] = useState(order.status);
     const [selectedTech, setSelectedTech] = useState(order.technicianId || "");
 
-    // Selected Inventory Item
     const [selectedPart, setSelectedPart] = useState("");
     const [partQty, setPartQty] = useState(1);
+    const [laborCost, setLaborCost] = useState(order.laborCost || 0);
 
     // Images for Report
     const [reportImages, setReportImages] = useState<string[]>([]);
@@ -65,11 +66,16 @@ export default function OrderDetailClient({
 
     const handleUpdateStatus = () => {
         startTransition(async () => {
-            const result = await updateOrderStatus(order.id, selectedStatus, selectedTech || undefined);
+            const result = await updateOrderStatus(
+                order.id,
+                selectedStatus,
+                selectedTech || undefined,
+                Number(laborCost)
+            );
             if (result && 'error' in result) {
                 toast.error(result.error);
             } else {
-                toast.success("Estado de la orden actualizado.");
+                toast.success("Orden y costos actualizados.");
             }
         });
     };
@@ -105,6 +111,7 @@ export default function OrderDetailClient({
     };
 
     const totalPartsCost = order.items.reduce((acc: number, item: any) => acc + (item.quantity * item.priceAtTime), 0);
+    const totalOrderValue = totalPartsCost + (order.laborCost || 0);
 
     return (
         <div className="max-w-5xl mx-auto flex flex-col gap-8">
@@ -222,7 +229,26 @@ export default function OrderDetailClient({
                                     </div>
                                 )}
 
-                                <p className="text-xs text-zinc-400 text-right mt-2">Firmado por: {order.report.technician.name}</p>
+                                <p className="text-[10px] font-black text-zinc-400 text-right mt-4 uppercase tracking-widest italic flex items-center justify-end gap-2">
+                                    <Users className="w-3 h-3" />
+                                    Responsable: {order.report.technician.name}
+                                </p>
+
+                                {/* DESGLOSE FINANCIERO */}
+                                <div className="mt-4 border-t border-zinc-100 dark:border-zinc-800 pt-4 flex flex-col gap-2 max-w-[200px] ml-auto">
+                                    <div className="flex justify-between text-[10px] font-bold">
+                                        <span className="text-zinc-500 uppercase">Repuestos:</span>
+                                        <span className="text-slate-900 dark:text-zinc-200">${totalPartsCost.toLocaleString('es-CO')}</span>
+                                    </div>
+                                    <div className="flex justify-between text-[10px] font-bold">
+                                        <span className="text-zinc-500 uppercase">Mano de Obra:</span>
+                                        <span className="text-slate-900 dark:text-zinc-200">${(order.laborCost || 0).toLocaleString('es-CO')}</span>
+                                    </div>
+                                    <div className="flex justify-between text-xs font-black border-t border-zinc-200 dark:border-zinc-700 pt-2 mt-1">
+                                        <span className="text-blue-600 uppercase tracking-tighter">TOTAL:</span>
+                                        <span className="text-blue-600 underline underline-offset-2">${totalOrderValue.toLocaleString('es-CO')}</span>
+                                    </div>
+                                </div>
                             </div>
                         ) : role !== "RECEPCION" ? (
                             // FORMULARIO DE REPORTE (SOLO TÉCNICOS Y ADMIN)
@@ -296,12 +322,26 @@ export default function OrderDetailClient({
                                     {technicians.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                                 </select>
                             </div>
+                            <div>
+                                <label className="text-xs font-semibold text-zinc-500 mb-1 block">Mano de Obra ($)</label>
+                                <input
+                                    type="number"
+                                    value={laborCost}
+                                    onChange={(e) => setLaborCost(Number(e.target.value))}
+                                    className="w-full p-2 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-lg text-sm dark:text-white outline-none font-mono"
+                                    placeholder="0.00"
+                                />
+                            </div>
                             <button
                                 onClick={handleUpdateStatus}
-                                disabled={isPending || (selectedStatus === order.status && selectedTech === (order.technicianId || ""))}
+                                disabled={isPending || (
+                                    selectedStatus === order.status &&
+                                    selectedTech === (order.technicianId || "") &&
+                                    Number(laborCost) === order.laborCost
+                                )}
                                 className="w-full bg-slate-900 text-white dark:bg-white dark:text-slate-900 py-2.5 rounded-xl text-sm font-bold shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed mt-2"
                             >
-                                {isPending ? "Aplicando..." : "Actualizar Orden"}
+                                {isPending ? "Aplicando..." : "Actualizar Orden y Costos"}
                             </button>
                         </div>
                     </div>
@@ -487,9 +527,17 @@ export default function OrderDetailClient({
                                         ))}
                                     </tbody>
                                     <tfoot>
+                                        <tr className="border-t">
+                                            <td colSpan={3} className="py-2 text-right text-xs font-bold text-gray-500 uppercase">Total Repuestos:</td>
+                                            <td className="py-2 text-right font-bold text-sm">${totalPartsCost.toLocaleString('es-CO')}</td>
+                                        </tr>
                                         <tr>
-                                            <td colSpan={3} className="py-3 text-right text-sm font-bold text-gray-500">TOTAL REPUESTOS:</td>
-                                            <td className="py-3 text-right font-black text-lg">${totalPartsCost.toLocaleString('es-CO')}</td>
+                                            <td colSpan={3} className="py-2 text-right text-xs font-bold text-gray-500 uppercase">Mano de Obra:</td>
+                                            <td className="py-2 text-right font-bold text-sm">${(order.laborCost || 0).toLocaleString('es-CO')}</td>
+                                        </tr>
+                                        <tr className="border-t-2 border-black">
+                                            <td colSpan={3} className="py-3 text-right text-sm font-black text-slate-900 uppercase tracking-tighter text-lg">TOTAL A PAGAR:</td>
+                                            <td className="py-3 text-right font-black text-xl text-blue-600">${totalOrderValue.toLocaleString('es-CO')}</td>
                                         </tr>
                                     </tfoot>
                                 </table>

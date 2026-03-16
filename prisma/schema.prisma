@@ -99,6 +99,8 @@ model WorkOrder {
   technicianId   String?
   technician     User?       @relation("AssignedTechnician", fields: [technicianId], references: [id])
   
+  laborCost      Float       @default(0) // Costo de mano de obra
+  
   items          WorkOrderItem[]
   report         WorkReport?
 

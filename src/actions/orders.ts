@@ -63,13 +63,21 @@ export async function createOrder(formData: FormData) {
     redirect("/dashboard/orders");
 }
 
-export async function updateOrderStatus(orderId: string, status: OrderStatus, technicianId?: string) {
+export async function updateOrderStatus(
+    orderId: string,
+    status: OrderStatus,
+    technicianId?: string,
+    laborCost?: number
+) {
     try {
         await ensureStaff();
 
         const data: any = { status };
         if (technicianId) {
             data.technicianId = technicianId;
+        }
+        if (typeof laborCost === 'number') {
+            data.laborCost = laborCost;
         }
 
         await prisma.workOrder.update({

@@ -205,7 +205,7 @@ function QuickCustomerModal({
         const fd = new FormData(e.currentTarget);
         startTransition(async () => {
             const res = await createCustomerInline(fd);
-            if ("error" in res) {
+            if (res && 'error' in res) {
                 toast.error(res.error as string);
             } else {
                 const created = res as Customer;

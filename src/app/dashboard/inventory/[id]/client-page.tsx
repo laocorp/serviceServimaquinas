@@ -22,7 +22,7 @@ export default function EditInventoryItemPage({
         startTransition(async () => {
             const result = await updateInventoryItem(item.id, formData);
 
-            if (result?.error) {
+            if (result && 'error' in result) {
                 toast.error(result.error);
             } else {
                 toast.success("Artículo actualizado exitosamente.");
@@ -36,7 +36,7 @@ export default function EditInventoryItemPage({
         startDeleteTransition(async () => {
             const result = await deleteInventoryItem(item.id);
 
-            if (result?.error) {
+            if (result && 'error' in result) {
                 toast.error(result.error);
             } else {
                 toast.success("Artículo eliminado.");

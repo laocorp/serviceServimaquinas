@@ -19,7 +19,7 @@ export default function EditCustomerPage({
         startTransition(async () => {
             const result = await updateCustomer(customer.id, formData);
 
-            if (result?.error) {
+            if (result && 'error' in result) {
                 toast.error(result.error);
             } else {
                 toast.success("Perfil actualizado exitosamente.");
@@ -33,7 +33,7 @@ export default function EditCustomerPage({
         startDeleteTransition(async () => {
             const result = await deleteCustomer(customer.id);
 
-            if (result?.error) {
+            if (result && 'error' in result) {
                 toast.error(result.error);
             } else {
                 toast.success("Cliente eliminado.");

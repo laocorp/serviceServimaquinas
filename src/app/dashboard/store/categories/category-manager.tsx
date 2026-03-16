@@ -16,8 +16,9 @@ export function CategoryManager({ initialCategories }: { initialCategories: any[
 
         startTransition(async () => {
             const res = await createStoreCategory(name);
-            if (res.error) toast.error(res.error);
-            else {
+            if (res && 'error' in res) {
+                toast.error(res.error);
+            } else if (res && 'success' in res) {
                 toast.success(res.success);
                 setName("");
                 router.refresh();

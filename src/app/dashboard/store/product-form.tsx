@@ -22,8 +22,9 @@ export function ProductForm({ categories, initialData }: { categories: any[], in
                 ? await updateProduct(initialData.id, formData)
                 : await createProduct(formData);
 
-            if (res.error) toast.error(res.error);
-            else {
+            if (res && 'error' in res) {
+                toast.error(res.error);
+            } else if (res && 'success' in res) {
                 toast.success(res.success);
                 router.push("/dashboard/store");
                 router.refresh();

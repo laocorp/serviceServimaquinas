@@ -4,6 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useNavbar } from "./NavbarContext";
+import { X } from "lucide-react";
 
 const navItems = [
     {
@@ -90,6 +92,7 @@ const navItems = [
 
 export function Sidebar({ role = "TECNICO" }: { role?: string }) {
     const pathname = usePathname();
+    const { isOpen, close } = useNavbar();
 
     const filteredNavItems = navItems.filter(item => {
         if (item.name === "Configuración" && role !== "ADMIN") return false;
@@ -98,72 +101,91 @@ export function Sidebar({ role = "TECNICO" }: { role?: string }) {
     });
 
     return (
-        <aside className="w-72 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800/50 flex flex-col h-screen fixed top-0 left-0 z-40">
-            {/* Brand Header */}
-            <div className="h-20 flex items-center px-8 border-b border-zinc-100 dark:border-zinc-900/50">
-                <Link href="/dashboard" className="flex items-center gap-3">
-                    <div className="bg-slate-900 text-white rounded-lg p-1.5 shadow-sm">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                        </svg>
-                    </div>
-                    <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-zinc-100">
-                        Servimaquinas
-                    </span>
-                </Link>
-            </div>
+        <>
+            {/* Mobile Overlay */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden"
+                    onClick={close}
+                />
+            )}
 
-            {/* Navigation */}
-            <nav className="flex-1 px-4 py-8 flex flex-col gap-2 overflow-y-auto">
-                {filteredNavItems.map((item) => {
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+            <aside className={cn(
+                "w-72 bg-white dark:bg-zinc-950 border-r border-zinc-200 dark:border-zinc-800/50 flex flex-col h-screen fixed top-0 left-0 z-50 transition-transform duration-300 lg:translate-x-0",
+                isOpen ? "translate-x-0" : "-translate-x-full"
+            )}>
+                {/* Brand Header */}
+                <div className="h-20 flex items-center justify-between px-8 border-b border-zinc-100 dark:border-zinc-900/50">
+                    <Link href="/dashboard" className="flex items-center gap-3" onClick={close}>
+                        <div className="bg-slate-900 text-white rounded-lg p-1.5 shadow-sm">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                            </svg>
+                        </div>
+                        <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-zinc-100 uppercase">
+                            Servimaquinas
+                        </span>
+                    </Link>
 
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={cn(
-                                "relative flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all group",
-                                isActive
-                                    ? "text-slate-900 dark:text-white"
-                                    : "text-zinc-500 hover:text-slate-900 dark:hover:text-zinc-200"
-                            )}
-                        >
-                            {isActive && (
-                                <motion.div
-                                    layoutId="activeTab"
-                                    className="absolute inset-0 bg-slate-100 dark:bg-zinc-900 rounded-2xl"
-                                    initial={false}
-                                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                />
-                            )}
-                            <span className="relative z-10 opacity-80 group-hover:opacity-100 transition-opacity">
-                                {item.icon}
-                            </span>
-                            <span className="relative z-10">{item.name}</span>
-                        </Link>
-                    );
-                })}
-            </nav>
-
-            {/* Footer Support info */}
-            <div className="p-8">
-                <div className="bg-slate-50 dark:bg-zinc-900/50 rounded-3xl p-6 border border-zinc-100 dark:border-zinc-800">
-                    <p className="text-xs font-semibold text-slate-900 dark:text-zinc-300 mb-1">
-                        Soporte Premium
-                    </p>
-                    <p className="text-xs text-zinc-500 mb-4 leading-relaxed">
-                        ¿Necesitas ayuda con el sistema? Contacta a tu administrador.
-                    </p>
-                    <button className="text-xs font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-1 group">
-                        Ver documentación
-                        <svg className="transform group-hover:translate-x-1 transition-transform" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="5" y1="12" x2="19" y2="12" />
-                            <polyline points="12 5 19 12 12 19" />
-                        </svg>
+                    {/* Mobile Close Button */}
+                    <button onClick={close} className="lg:hidden p-2 text-zinc-500 hover:text-slate-900 dark:hover:text-white transition-colors">
+                        <X className="w-5 h-5" />
                     </button>
                 </div>
-            </div>
-        </aside>
+
+                {/* Navigation */}
+                <nav className="flex-1 px-4 py-8 flex flex-col gap-2 overflow-y-auto">
+                    {filteredNavItems.map((item) => {
+                        const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                onClick={close}
+                                className={cn(
+                                    "relative flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium transition-all group",
+                                    isActive
+                                        ? "text-slate-900 dark:text-white"
+                                        : "text-zinc-500 hover:text-slate-900 dark:hover:text-zinc-200"
+                                )}
+                            >
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="activeTab"
+                                        className="absolute inset-0 bg-slate-100 dark:bg-zinc-900 rounded-2xl"
+                                        initial={false}
+                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                                    />
+                                )}
+                                <span className="relative z-10 opacity-80 group-hover:opacity-100 transition-opacity">
+                                    {item.icon}
+                                </span>
+                                <span className="relative z-10">{item.name}</span>
+                            </Link>
+                        );
+                    })}
+                </nav>
+
+                {/* Footer Support info */}
+                <div className="p-8">
+                    <div className="bg-slate-50 dark:bg-zinc-900/50 rounded-3xl p-6 border border-zinc-100 dark:border-zinc-800">
+                        <p className="text-xs font-semibold text-slate-900 dark:text-zinc-300 mb-1">
+                            Soporte Premium
+                        </p>
+                        <p className="text-xs text-zinc-500 mb-4 leading-relaxed">
+                            ¿Necesitas ayuda con el sistema? Contacta a tu administrador.
+                        </p>
+                        <button className="text-xs font-bold text-slate-900 dark:text-zinc-100 flex items-center gap-1 group">
+                            Ver documentación
+                            <svg className="transform group-hover:translate-x-1 transition-transform" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                                <polyline points="12 5 19 12 12 19" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+        </>
     );
 }

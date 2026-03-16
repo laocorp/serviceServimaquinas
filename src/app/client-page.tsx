@@ -56,23 +56,26 @@ export default function LandingPageClient({ settings, products }: { settings: an
     router.push(`/track/${trackingCode.trim().toUpperCase()}`);
   };
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen font-sans selection:bg-blue-600/10 selection:text-blue-600 bg-white text-slate-900 overflow-x-hidden">
 
       <nav className="fixed top-0 w-full z-50 transition-all duration-500 bg-white/70 backdrop-blur-2xl border-b border-slate-100/50">
-        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
-          <Link href="/" className="group flex items-center gap-4">
-            <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-900/20 group-hover:scale-110 transition-transform duration-500 rotate-[-5deg] group-hover:rotate-0">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <div className="max-w-7xl mx-auto px-6 h-20 md:h-24 flex items-center justify-between">
+          <Link href="/" className="group flex items-center gap-3 md:gap-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-slate-900 rounded-xl md:rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-900/20 group-hover:scale-110 transition-transform duration-500 rotate-[-5deg] group-hover:rotate-0">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="md:w-6 md:h-6">
                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
               </svg>
             </div>
             <div className="flex flex-col -gap-1">
-              <span className="font-black text-2xl tracking-tighter text-slate-950 uppercase leading-none">{companyName}</span>
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 opacity-80">Engineering Elite</span>
+              <span className="font-black text-xl md:text-2xl tracking-tighter text-slate-950 uppercase leading-none">{companyName}</span>
+              <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 opacity-80">Engineering Elite</span>
             </div>
           </Link>
 
+          {/* Nav Desktop */}
           <div className="hidden lg:flex items-center gap-10">
             {['Servicios', 'Tienda', 'Contacto'].map((item) => (
               <a
@@ -91,10 +94,51 @@ export default function LandingPageClient({ settings, products }: { settings: an
               </div>
             </Link>
           </div>
+
+          {/* Mobile Menu Trigger */}
+          <button
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="lg:hidden w-10 h-10 flex items-center justify-center text-slate-950"
+          >
+            <div className="flex flex-col gap-1.5 items-end">
+              <span className={`h-0.5 bg-current transition-all duration-300 ${isMobileMenuOpen ? 'w-6 rotate-45 translate-y-2' : 'w-6'}`} />
+              <span className={`h-0.5 bg-current transition-all duration-300 ${isMobileMenuOpen ? 'opacity-0' : 'w-4'}`} />
+              <span className={`h-0.5 bg-current transition-all duration-300 ${isMobileMenuOpen ? 'w-6 -rotate-45 -translate-y-2' : 'w-5'}`} />
+            </div>
+          </button>
         </div>
+
+        {/* Mobile Menu Overlay */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute top-full left-0 w-full bg-white border-b border-slate-100 p-6 flex flex-col gap-6 lg:hidden shadow-2xl"
+            >
+              {['Servicios', 'Tienda', 'Contacto'].map((item) => (
+                <a
+                  key={item}
+                  href={`#${item.toLowerCase()}`}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-lg font-black uppercase tracking-widest text-slate-600 active:text-blue-600"
+                >
+                  {item}
+                </a>
+              ))}
+              <Link
+                href="/login"
+                className="w-full py-4 bg-slate-950 text-white text-center rounded-2xl font-black uppercase tracking-widest"
+              >
+                Staff Access
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </nav>
 
-      <section className="relative pt-64 pb-40 overflow-hidden bg-slate-50">
+      <section className="relative pt-40 md:pt-64 pb-20 md:pb-40 overflow-hidden bg-slate-50">
         {/* ELEMENTOS DE FONDO TÉCNICOS */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 right-0 w-[60%] h-[120%] bg-[radial-gradient(circle_at_70%_20%,#0073CF15,transparent)]" />
@@ -103,21 +147,21 @@ export default function LandingPageClient({ settings, products }: { settings: an
         </div>
 
         <div className="max-w-7xl mx-auto px-6 relative z-10">
-          <div className="grid lg:grid-cols-12 gap-16 items-center">
+          <div className="grid lg:grid-cols-12 gap-10 md:gap-16 items-center">
 
-            <div className="lg:col-span-7 flex flex-col gap-10">
+            <div className="lg:col-span-7 flex flex-col gap-6 md:gap-10">
               <motion.div
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                className="inline-flex items-center gap-3 px-5 py-2.5 bg-white border border-slate-200/60 rounded-2xl w-fit shadow-2xl shadow-blue-500/5 backdrop-blur-xl"
+                className="inline-flex items-center gap-3 px-4 py-2 md:px-5 md:py-2.5 bg-white border border-slate-200/60 rounded-xl md:rounded-2xl w-fit shadow-2xl shadow-blue-500/5 backdrop-blur-xl"
               >
                 <div className="flex -space-x-2">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center overflow-hidden">
+                    <div key={i} className="w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center overflow-hidden">
                       <div className="w-full h-full bg-blue-600 opacity-20" />
                     </div>
                   ))}
                 </div>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
                   Trusted by <span className="text-slate-900">5,000+</span> Professional Technicians
                 </span>
               </motion.div>
@@ -126,30 +170,30 @@ export default function LandingPageClient({ settings, products }: { settings: an
                 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
                 className="flex flex-col"
               >
-                <h1 className="text-7xl md:text-9xl font-black leading-[0.85] tracking-[-0.04em] text-slate-950 mb-8">
+                <h1 className="text-5xl sm:text-6xl md:text-8xl lg:text-9xl font-black leading-[0.85] tracking-[-0.04em] text-slate-950 mb-6 md:mb-8">
                   SERVICE<br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700">REDEFINED</span>
                 </h1>
 
-                <p className="text-xl md:text-2xl text-slate-500 max-w-xl font-medium leading-relaxed mb-12">
+                <p className="text-lg md:text-2xl text-slate-500 max-w-xl font-medium leading-relaxed mb-10 md:mb-12">
                   Precisión alemana y tecnología de rastreo en vivo para tu equipo industrial pesado.
-                  <span className="text-slate-900"> El estándar de oro en reparación.</span>
+                  <span className="text-slate-900 block md:inline"> El estándar de oro en reparación.</span>
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-6 items-start">
                   <form onSubmit={handleTrack} className="group relative w-full max-w-md">
                     <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-[2rem] blur opacity-10 group-focus-within:opacity-30 transition duration-500" />
-                    <div className="relative flex p-2 bg-white rounded-[1.8rem] border border-slate-200 items-center overflow-hidden shadow-2xl">
-                      <div className="pl-6 text-slate-400">
+                    <div className="relative flex flex-col sm:flex-row p-2 bg-white rounded-2xl md:rounded-[1.8rem] border border-slate-200 items-center overflow-hidden shadow-2xl gap-2 sm:gap-0">
+                      <div className="hidden sm:block pl-6 text-slate-400">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                       </div>
                       <input
                         value={trackingCode}
                         onChange={e => setTrackingCode(e.target.value.toUpperCase())}
                         placeholder="Tracking ID: SRV-ABC123"
-                        className="flex-1 px-4 py-4 outline-none font-bold text-lg placeholder:text-slate-300 tracking-wider"
+                        className="w-full sm:flex-1 px-4 py-3 md:py-4 outline-none font-bold text-base md:text-lg placeholder:text-slate-300 tracking-wider text-center sm:text-left"
                       />
-                      <button className="bg-slate-950 text-white px-8 py-4 rounded-[1.4rem] text-sm font-black uppercase tracking-widest hover:bg-blue-600 transition-all active:scale-95">
+                      <button className="w-full sm:w-auto bg-slate-950 text-white px-8 py-3.5 md:py-4 rounded-xl md:rounded-[1.4rem] text-xs md:text-sm font-black uppercase tracking-widest hover:bg-blue-600 transition-all active:scale-95">
                         Track Now
                       </button>
                     </div>
@@ -215,70 +259,74 @@ export default function LandingPageClient({ settings, products }: { settings: an
             </p>
           </div>
 
-          <div className="grid md:grid-cols-6 grid-rows-2 gap-6 h-auto md:h-[700px]">
+          <div className="grid md:grid-cols-6 gap-6">
             {/* CARD 1: LARGE FEATURE */}
             <motion.div
               whileHover={{ y: -10 }}
-              className="md:col-span-3 md:row-span-2 bg-slate-950 rounded-[3rem] p-12 lg:p-16 text-white relative overflow-hidden group shadow-2xl"
+              className="md:col-span-3 lg:col-span-3 bg-slate-950 rounded-[2rem] md:rounded-[3rem] p-8 md:p-12 lg:p-16 text-white relative overflow-hidden group shadow-2xl min-h-[400px] md:min-h-[600px] flex flex-col"
             >
               <div className="absolute top-0 right-0 w-full h-full opacity-10 bg-[radial-gradient(circle_at_100%_0%,#0073CF,transparent)]" />
-              <div className="relative z-10 h-full flex flex-col justify-between">
+              <div className="relative z-10 h-full flex-1 flex flex-col justify-between">
                 <div>
-                  <div className="w-16 h-16 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center mb-10 border border-white/10 group-hover:scale-110 transition-transform">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-white/10 backdrop-blur-xl rounded-xl md:rounded-2xl flex items-center justify-center mb-6 md:mb-10 border border-white/10 group-hover:scale-110 transition-transform">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" className="md:w-8 md:h-8"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>
                   </div>
-                  <h4 className="text-5xl font-black mb-8 leading-tight tracking-tight">Especialistas en <br /><span className="text-blue-500">Alta Potencia.</span></h4>
-                  <p className="text-slate-400 text-lg leading-relaxed max-w-md">Diagnóstico avanzado asistido por software para herramientas Bosch Professional y equipo industrial pesado.</p>
+                  <h4 className="text-3xl md:text-5xl font-black mb-4 md:mb-8 leading-tight tracking-tight">Especialistas en <br /><span className="text-blue-500">Alta Potencia.</span></h4>
+                  <p className="text-slate-400 text-base md:text-lg leading-relaxed max-w-md">Diagnóstico avanzado asistido por software para herramientas Bosch Professional y equipo industrial pesado.</p>
                 </div>
 
-                <div className="mt-12 flex items-center gap-6">
+                <div className="mt-8 md:mt-12 flex items-center gap-4 md:gap-6">
                   <div className="flex -space-x-3">
                     {[1, 2, 3, 4].map(i => (
-                      <div key={i} className="w-10 h-10 rounded-full border-2 border-slate-900 bg-slate-800" />
+                      <div key={i} className="w-8 h-8 md:w-10 md:h-10 rounded-full border-2 border-slate-900 bg-slate-800" />
                     ))}
                   </div>
-                  <span className="text-sm font-bold text-slate-500 italic">Certificado por Bosch Global</span>
+                  <span className="text-xs md:text-sm font-bold text-slate-500 italic">Certificado por Bosch Global</span>
                 </div>
               </div>
             </motion.div>
 
-            {/* CARD 2: MEDIUM FEATURE (BLUE) */}
-            <motion.div
-              whileHover={{ y: -10 }}
-              className="md:col-span-3 bg-blue-600 rounded-[3rem] p-12 text-white relative overflow-hidden group shadow-2xl shadow-blue-600/20"
-            >
-              <div className="relative z-10 flex flex-col justify-between h-full">
-                <h4 className="text-3xl font-black leading-tight">Garantía de Repuestos <br />100% Originales.</h4>
-                <div className="flex items-center justify-between mt-8">
-                  <span className="text-sm font-bold opacity-80 uppercase tracking-widest">Inventory Stocked</span>
-                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>
+            {/* CARD 2: MEDIUM FEATURE (BLUE) / APILADO EN MOBILE */}
+            <div className="md:col-span-3 space-y-6 flex flex-col">
+              <motion.div
+                whileHover={{ y: -10 }}
+                className="flex-1 bg-blue-600 rounded-[2rem] md:rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden group shadow-2xl shadow-blue-600/20 min-h-[250px] md:min-h-0 flex flex-col"
+              >
+                <div className="relative z-10 flex-1 flex flex-col justify-between">
+                  <h4 className="text-2xl md:text-3xl font-black leading-tight">Garantía de Repuestos <br />100% Originales.</h4>
+                  <div className="flex items-center justify-between mt-6 md:mt-8">
+                    <span className="text-xs md:text-sm font-bold opacity-80 uppercase tracking-widest">Inventory Stocked</span>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" className="md:w-10 md:h-10"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>
+                  </div>
                 </div>
-              </div>
-              <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
-            </motion.div>
+                <div className="absolute -right-10 -bottom-10 w-32 h-32 md:w-48 md:h-48 bg-white/10 rounded-full blur-2xl md:blur-3xl" />
+              </motion.div>
 
-            {/* CARD 3: SMALL FEATURE (WHITE/SLATE) */}
-            <motion.div
-              whileHover={{ y: -10 }}
-              className="md:col-span-2 bg-slate-50 border border-slate-100 rounded-[3rem] p-10 flex flex-col justify-between group shadow-xl"
-            >
-              <div className="w-12 h-12 bg-red-500 rounded-2xl flex items-center justify-center text-white mb-6">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
-              </div>
-              <div>
-                <h5 className="text-xl font-black text-slate-950 mb-2">Entrega Express</h5>
-                <p className="text-slate-500 text-sm">Servicio de logística puerta a puerta a nivel nacional.</p>
-              </div>
-            </motion.div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 flex-2">
+                {/* CARD 3: SMALL FEATURE (WHITE/SLATE) */}
+                <motion.div
+                  whileHover={{ y: -10 }}
+                  className="sm:col-span-2 lg:col-span-2 bg-slate-50 border border-slate-100 rounded-[2rem] md:rounded-[3rem] p-8 md:p-10 flex flex-col justify-between group shadow-xl"
+                >
+                  <div className="w-10 h-10 md:w-12 md:h-12 bg-red-500 rounded-xl md:rounded-2xl flex items-center justify-center text-white mb-4 md:mb-6">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="md:w-6 md:h-6"><polyline points="20 6 9 17 4 12" /></svg>
+                  </div>
+                  <div>
+                    <h5 className="text-lg md:text-xl font-black text-slate-950 mb-2">Entrega Express</h5>
+                    <p className="text-slate-500 text-xs md:text-sm">Servicio de logística puerta a puerta a nivel nacional.</p>
+                  </div>
+                </motion.div>
 
-            {/* CARD 4: SMALL FEATURE (ACCENT) */}
-            <motion.div
-              whileHover={{ y: -10 }}
-              className="md:col-span-1 bg-white border-2 border-blue-50 rounded-[3rem] p-10 flex flex-col items-center justify-center text-center group hover:border-blue-200 transition-all shadow-xl"
-            >
-              <span className="text-4xl font-black text-blue-600 mb-2">24h</span>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-tight">SLA de <br />Diagnóstico</p>
-            </motion.div>
+                {/* CARD 4: SMALL FEATURE (ACCENT) */}
+                <motion.div
+                  whileHover={{ y: -10 }}
+                  className="sm:col-span-1 lg:col-span-1 bg-white border-2 border-blue-50 rounded-[2rem] md:rounded-[3rem] p-8 md:p-10 flex flex-col items-center justify-center text-center group hover:border-blue-200 transition-all shadow-xl min-h-[150px]"
+                >
+                  <span className="text-3xl md:text-4xl font-black text-blue-600 mb-2">24h</span>
+                  <p className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-slate-400 leading-tight">SLA de <br />Diagnóstico</p>
+                </motion.div>
+              </div>
+            </div>
 
           </div>
         </div>
@@ -315,16 +363,16 @@ export default function LandingPageClient({ settings, products }: { settings: an
             <div
               ref={carouselRef}
               onScroll={handleScroll}
-              className="flex gap-10 overflow-x-auto snap-x snap-mandatory scrollbar-hide px-[max(24px,calc((100vw-1280px)/2))] py-12"
+              className="flex gap-6 md:gap-10 overflow-x-auto snap-x snap-mandatory scrollbar-hide px-6 md:px-[max(24px,calc((100vw-1280px)/2))] py-12"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {products.map((item) => (
                 <motion.div
                   key={item.id}
                   whileHover={{ y: -15 }}
-                  className="snap-center shrink-0 w-[380px] group bg-white rounded-[3.5rem] border border-slate-100/50 overflow-hidden shadow-[0_20px_50px_-20px_rgba(0,0,0,0.05)] hover:shadow-[0_40px_80px_-20px_rgba(0,115,207,0.15)] transition-all duration-700"
+                  className="snap-center shrink-0 w-[300px] md:w-[380px] group bg-white rounded-[2.5rem] md:rounded-[3.5rem] border border-slate-100/50 overflow-hidden shadow-[0_20px_50px_-20px_rgba(0,0,0,0.05)] hover:shadow-[0_40px_80px_-20px_rgba(0,115,207,0.15)] transition-all duration-700"
                 >
-                  <div className="aspect-[4/5] bg-slate-50 relative overflow-hidden p-10 flex flex-col justify-center">
+                  <div className="aspect-[4/5] bg-slate-50 relative overflow-hidden p-8 md:p-10 flex flex-col justify-center">
                     <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,1),rgba(241,245,249,0.5))]" />
                     {item.image && (
                       <img

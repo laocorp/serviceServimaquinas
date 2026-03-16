@@ -312,22 +312,24 @@ export default function SettingsClient({
             </div>
 
             {/* Tabs */}
-            <div className="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800/60 rounded-xl w-fit">
-                {tabs.map(t => (
-                    <button key={t.id} onClick={() => setTab(t.id)}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${tab === t.id
-                            ? "bg-white dark:bg-zinc-900 text-slate-900 dark:text-white shadow-sm"
-                            : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
-                            }`}>
-                        {t.icon}
-                        {t.label}
-                        {t.id === "team" && (
-                            <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${tab === "team" ? "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400" : "bg-zinc-200 dark:bg-zinc-700 text-zinc-500"}`}>
-                                {users.length}
-                            </span>
-                        )}
-                    </button>
-                ))}
+            <div className="overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+                <div className="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800/60 rounded-xl w-fit min-w-full sm:min-w-0">
+                    {tabs.map(t => (
+                        <button key={t.id} onClick={() => setTab(t.id)}
+                            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all whitespace-nowrap ${tab === t.id
+                                ? "bg-white dark:bg-zinc-900 text-slate-900 dark:text-white shadow-sm"
+                                : "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300"
+                                }`}>
+                            {t.icon}
+                            {t.label}
+                            {t.id === "team" && (
+                                <span className={`text-xs font-bold px-1.5 py-0.5 rounded-full ${tab === "team" ? "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400" : "bg-zinc-200 dark:bg-zinc-700 text-zinc-500"}`}>
+                                    {users.length}
+                                </span>
+                            )}
+                        </button>
+                    ))}
+                </div>
             </div>
 
             {/* Contenido de tabs */}

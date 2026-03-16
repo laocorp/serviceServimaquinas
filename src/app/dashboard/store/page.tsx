@@ -25,22 +25,22 @@ export default async function StoreManagementPage() {
     return (
         <div className="flex flex-col gap-8">
             {/* Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
                 <div>
                     <h1 className="text-3xl font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight">Escaparate de Tienda</h1>
                     <p className="text-zinc-500 mt-1">Gestiona los productos que aparecen en la página principal.</p>
                 </div>
 
-                <div className="flex items-center gap-3">
-                    <Link href="/dashboard/store/categories" className="px-4 py-2.5 rounded-xl text-sm font-semibold border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all text-slate-600 dark:text-zinc-400">
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                    <Link href="/dashboard/store/categories" className="w-full sm:w-auto text-center px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-widest border border-zinc-200 dark:border-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all text-slate-600 dark:text-zinc-400">
                         Categorías
                     </Link>
-                    <Link href="/dashboard/store/new" className="flex items-center gap-2 bg-[#0073CF] text-white px-4 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:shadow-md transition-all hover:bg-[#0060B0]">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <Link href="/dashboard/store/new" className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#0073CF] text-white px-6 py-3 rounded-2xl text-sm font-black uppercase tracking-widest shadow-lg shadow-blue-500/20 hover:shadow-xl hover:bg-[#0060B0] transition-all active:scale-95">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="12" y1="5" x2="12" y2="19" />
                             <line x1="5" y1="12" x2="19" y2="12" />
                         </svg>
-                        Añadir Producto
+                        Nuevo Producto
                     </Link>
                 </div>
             </div>

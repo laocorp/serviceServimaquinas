@@ -4,6 +4,8 @@ import { signOut } from "next-auth/react";
 import { type Session } from "next-auth";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useNavbar } from "./NavbarContext";
+import { Menu, X } from "lucide-react";
 
 // Tipo de notificación
 interface Notification {
@@ -52,6 +54,7 @@ export function Topbar({ session }: { session: Session | null }) {
     const [bellOpen, setBellOpen] = useState(false);
     const bellRef = useRef<HTMLDivElement>(null);
     const { notifications, unreadCount, markAllRead } = useNotifications();
+    const { isOpen, toggle } = useNavbar();
 
     const roleColors: Record<string, string> = {
         ADMIN: "bg-slate-900 text-white dark:bg-white dark:text-slate-900",
@@ -86,7 +89,14 @@ export function Topbar({ session }: { session: Session | null }) {
     };
 
     return (
-        <header className="h-20 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800/50 flex items-center justify-between px-10 sticky top-0 z-30">
+        <header className="h-20 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl border-b border-zinc-200 dark:border-zinc-800/50 flex items-center justify-between px-4 sm:px-10 sticky top-0 z-30">
+
+            <button
+                onClick={toggle}
+                className="lg:hidden p-2 text-slate-900 dark:text-white mr-2"
+            >
+                {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
 
             <div className="flex-1">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-zinc-100 tracking-tight">Panel de Control</h2>
@@ -181,8 +191,8 @@ export function Topbar({ session }: { session: Session | null }) {
                 </div>
 
                 {/* Perfil de usuario */}
-                <div className="flex items-center gap-4">
-                    <div className="flex flex-col items-end">
+                <div className="flex items-center gap-2 sm:gap-4">
+                    <div className="hidden sm:flex flex-col items-end">
                         <span className="text-sm font-semibold text-slate-900 dark:text-zinc-100 leading-none mb-1">
                             {session?.user?.name || "Usuario"}
                         </span>

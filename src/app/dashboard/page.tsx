@@ -145,42 +145,60 @@ export default async function DashboardPage() {
                     <CommandCenter />
                 </div>
 
-                {/* 3. Panel de Actividad Visual (Vertical Derecha) */}
-                <div className="md:col-span-4 lg:col-span-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-6 shadow-sm overflow-hidden flex flex-col h-[500px]">
+                {/* 3. Panel de Actividad Visual (Centro-Abajo) */}
+                <div className="md:col-span-7 lg:col-span-8 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-6 shadow-sm overflow-hidden flex flex-col h-[400px]">
                     <div className="flex items-center justify-between mb-6">
                         <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest italic">Live Feed</h2>
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold text-zinc-400">ACTIVIDAD EN VIVO</span>
+                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                        </div>
                     </div>
                     <ActivityTimeline items={timelineItems as any} />
                 </div>
 
-                {/* 4. Gráfico / Insights Operativos (Área Grande Inferior) */}
-                <div className="md:col-span-8 lg:col-span-9 bg-[#0073CF] rounded-[3rem] p-1 shadow-2xl overflow-hidden relative group">
-                    <div className="h-full w-full bg-white dark:bg-zinc-950 rounded-[2.8rem] p-8 flex flex-col md:flex-row items-center gap-8 border-4 border-transparent group-hover:border-blue-500/10 transition-all">
-                        <div className="flex-1">
-                            <h3 className="text-2xl font-black text-slate-900 dark:text-zinc-100 tracking-tighter uppercase italic leading-none mb-2">
-                                Performance <br /> de Ingeniería
-                            </h3>
-                            <p className="text-zinc-500 text-sm font-medium max-w-sm mb-6">
-                                El taller está operando al <span className="text-emerald-600 font-bold">87% de capacidad</span>. Se recomienda priorizar entregas pendientes de la marca <span className="font-bold underline italic text-slate-800 dark:text-zinc-200">Bosch Professional</span>.
-                            </p>
-                            <div className="flex gap-4">
-                                <div className="bg-zinc-50 dark:bg-zinc-900 px-4 py-3 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest italic leading-none mb-1">Reparado</p>
-                                    <p className="text-xl font-black text-slate-800 dark:text-zinc-200">2.4 days</p>
+                {/* 4. Gráfico / Insights Operativos (Derecha-Abajo - MÁS COMPACTO) */}
+                <div className="md:col-span-5 lg:col-span-4 bg-[#0073CF] rounded-[2.5rem] p-0.5 shadow-xl overflow-hidden relative group h-[400px]">
+                    <div className="h-full w-full bg-white dark:bg-zinc-950 rounded-[2.4rem] p-6 flex flex-col justify-between border-4 border-transparent group-hover:border-blue-500/5 transition-all">
+                        <div>
+                            <div className="flex items-center gap-2 mb-4">
+                                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
+                                    <TrendingUp className="w-4 h-4 text-blue-600" />
                                 </div>
-                                <div className="bg-zinc-50 dark:bg-zinc-900 px-4 py-3 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest italic leading-none mb-1">Fidelidad</p>
-                                    <p className="text-xl font-black text-slate-800 dark:text-zinc-200">92%</p>
+                                <h3 className="text-lg font-black text-slate-900 dark:text-zinc-100 tracking-tighter uppercase italic leading-none">
+                                    Performance
+                                </h3>
+                            </div>
+
+                            <p className="text-zinc-500 text-[11px] font-medium leading-relaxed mb-4">
+                                Operando al <span className="text-emerald-600 font-bold text-xs">87%</span> de capacidad técnica.
+                            </p>
+
+                            <div className="grid grid-cols-2 gap-3 mb-6">
+                                <div className="bg-zinc-50 dark:bg-zinc-900 p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest leading-none mb-1">Cierre</p>
+                                    <p className="text-sm font-black text-slate-800 dark:text-zinc-200">2.4 d</p>
+                                </div>
+                                <div className="bg-zinc-50 dark:bg-zinc-900 p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest leading-none mb-1">Satisf.</p>
+                                    <p className="text-sm font-black text-slate-800 dark:text-zinc-200">92%</p>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Visual Placeholder for Graph (Technical Blueprint Look) */}
-                        <div className="w-full md:w-[300px] h-[180px] bg-slate-50 dark:bg-zinc-900 rounded-3xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 flex items-center justify-center relative overflow-hidden">
-                            <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
-                            <TrendingUp className="w-12 h-12 text-blue-500/20" />
-                            <p className="absolute bottom-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Modulo Analytics Activo</p>
+                        {/* Visual Blueprint (Smaller) */}
+                        <div className="w-full h-24 bg-slate-50 dark:bg-zinc-900 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 flex items-center justify-center relative overflow-hidden">
+                            <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '10px 10px' }} />
+                            <div className="flex flex-col items-center">
+                                <div className="flex gap-1 items-end h-8 mb-2">
+                                    <div className="w-1 bg-blue-200 h-2" />
+                                    <div className="w-1 bg-blue-300 h-4" />
+                                    <div className="w-1 bg-blue-400 h-3" />
+                                    <div className="w-1 bg-blue-500 h-6" />
+                                    <div className="w-1 bg-blue-600 h-5" />
+                                </div>
+                                <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-[0.2em]">Analytics Engine Active</p>
+                            </div>
                         </div>
                     </div>
                 </div>

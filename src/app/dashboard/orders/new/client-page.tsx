@@ -340,7 +340,7 @@ export default function NewOrderClient({
 
         startTransition(async () => {
             const result = await createOrder(formData);
-            if (result?.error) {
+            if (result && 'error' in result) {
                 toast.error(result.error);
             } else {
                 toast.success("Orden de trabajo creada. Código de rastreo generado automáticamente.");

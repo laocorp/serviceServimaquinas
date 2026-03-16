@@ -12,7 +12,7 @@ export default function NewInventoryItemPage() {
         startTransition(async () => {
             const result = await createInventoryItem(formData);
 
-            if (result?.error) {
+            if (result && 'error' in result) {
                 toast.error(result.error);
             } else {
                 toast.success("Artículo creado exitosamente.");

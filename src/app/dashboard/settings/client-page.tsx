@@ -35,7 +35,11 @@ function CompanyTab({ settings }: { settings: any }) {
     const handleSubmit = (formData: FormData) => {
         startTransition(async () => {
             const res = await updateSettings(formData);
-            res?.error ? toast.error(res.error) : toast.success("Configuración guardada ✓");
+            if (res && 'error' in res) {
+                toast.error(res.error);
+            } else {
+                toast.success("Configuración guardada ✓");
+            }
         });
     };
 

@@ -66,8 +66,11 @@ export default function OrderDetailClient({
     const handleUpdateStatus = () => {
         startTransition(async () => {
             const result = await updateOrderStatus(order.id, selectedStatus, selectedTech || undefined);
-            if (result?.error) toast.error(result.error);
-            else toast.success("Estado de la orden actualizado.");
+            if (result && 'error' in result) {
+                toast.error(result.error);
+            } else {
+                toast.success("Estado de la orden actualizado.");
+            }
         });
     };
 
@@ -77,7 +80,7 @@ export default function OrderDetailClient({
 
         startTransition(async () => {
             const result = await addInventoryItemToOrder(order.id, selectedPart, partQty);
-            if (result?.error) {
+            if (result && 'error' in result) {
                 toast.error(result.error);
             } else {
                 toast.success("Repuesto agregado a la cuenta de la orden.");
@@ -93,7 +96,7 @@ export default function OrderDetailClient({
 
         startTransition(async () => {
             const result = await createWorkReport(order.id, currentUserId, formData);
-            if (result?.error) {
+            if (result && 'error' in result) {
                 toast.error(result.error);
             } else {
                 toast.success("Informe Técnico guardado y orden marcada como REPARADA.");

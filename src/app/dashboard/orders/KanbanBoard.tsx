@@ -244,7 +244,7 @@ export default function OrdersBoard({ initialOrders, role = "TECNICO" }: { initi
         // Persistir en DB
         startTransition(async () => {
             const res = await updateOrderStatus(draggingId, newStatus);
-            if (res?.error) {
+            if (res && 'error' in res) {
                 toast.error(res.error);
                 // Revertir en caso de error
                 setOrders(prev => prev.map(o => o.id === draggingId ? { ...o, status: order.status } : o));

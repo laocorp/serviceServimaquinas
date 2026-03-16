@@ -12,7 +12,7 @@ export default function NewCustomerClient() {
         startTransition(async () => {
             const result = await createCustomer(formData);
 
-            if (result?.error) {
+            if (result && 'error' in result) {
                 toast.error(result.error);
             } else {
                 toast.success("Cliente guardado en el CRM.");

@@ -8,8 +8,8 @@ export const productSchema = z.object({
     stock: z.number().int().nonnegative("El stock no puede ser negativo"),
     isPromotion: z.boolean().default(false),
     promoPrice: z.number().nullable().optional(),
-    categoryId: z.string().uuid().nullable().optional(),
-    image: z.string().url("URL de imagen inválida").or(z.string().startsWith("/uploads/")),
+    categoryId: z.string().nullable().optional(),
+    image: z.string().url("URL de imagen inválida").or(z.string().min(1)).nullable().optional(),
 });
 
 export const categorySchema = z.object({

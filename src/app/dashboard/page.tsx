@@ -1,8 +1,21 @@
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+import { auth } from "@/auth";
 import DashboardActions from "./DashboardActions";
+import StatsSmall from "@/components/dashboard/StatsSmall";
+import CommandCenter from "@/components/dashboard/CommandCenter";
+import ActivityTimeline from "@/components/dashboard/ActivityTimeline";
+import {
+    ClipboardList,
+    Users,
+    Settings2,
+    AlertCircle,
+    TrendingUp,
+    Package
+} from "lucide-react";
 
 export default async function DashboardPage() {
+    const session = await auth();
+
     // 1. Órdenes Activas
     const activeOrdersCount = await prisma.workOrder.count({
         where: {
@@ -19,21 +32,50 @@ export default async function DashboardPage() {
     const usedItems = await prisma.workOrderItem.findMany({
         select: { quantity: true, priceAtTime: true },
     });
-    const estimatedRevenue = usedItems.reduce(
-        (total: number, item: { quantity: number; priceAtTime: number }) =>
-            total + item.quantity * item.priceAtTime,
+    const totalInventoryValue = usedItems.reduce(
+        (total, item) => total + (item.quantity * item.priceAtTime),
         0
     );
 
-    // 4. Alertas de Inventario (stock <= minStock)
-    const allItems = await prisma.inventoryItem.findMany({
-        select: { stock: true, minStock: true },
+    // 4. Alertas de Inventario
+    const inventoryAlertsCount = await prisma.inventoryItem.count({
+        where: {
+            stock: { lte: prisma.inventoryItem.fields.minStock }
+        }
     });
-    const inventoryAlertsCount = allItems.filter(
-        (item: { stock: number; minStock: number }) => item.stock <= item.minStock
-    ).length;
 
-    // 5. Datos para exportar CSV (se pasan al client component)
+    // 5. Actividad Reciente (Últimas 10 acciones significativas)
+    const recentOrders = await prisma.workOrder.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: { customer: true }
+    });
+
+    const recentReports = await prisma.workReport.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: { workOrder: true }
+    });
+
+    const timelineItems = [
+        ...recentOrders.map(o => ({
+            id: o.id,
+            type: 'ORDER_CREATED' as const,
+            title: `Nueva Orden: ${o.deviceBrand}`,
+            description: `${o.customer?.firstName} ${o.customer?.lastName} - ${o.reportedIssue}`,
+            time: o.createdAt
+        })),
+        ...recentReports.map(r => ({
+            id: r.id,
+            type: 'REPORT_ADDED' as const,
+            title: "Reporte Técnico",
+            description: `Reparación finalizada para ${r.workOrder.deviceBrand} ${r.workOrder.deviceModel}`,
+            time: r.createdAt,
+            image: (r.images as string[])[0]
+        }))
+    ].sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 8);
+
+    // 6. Datos de exportación
     const ordersForExport = await prisma.workOrder.findMany({
         select: {
             trackingCode: true,
@@ -49,101 +91,100 @@ export default async function DashboardPage() {
     });
 
     return (
-        <div className="flex flex-col gap-8">
-            {/* Header */}
-            <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-6 animate-in fade-in duration-700">
+            {/* Upper Header */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight">
-                        Cifras Generales
+                    <h1 className="text-4xl font-black text-slate-900 dark:text-zinc-100 tracking-tight flex items-center gap-3">
+                        Dashboard <span className="text-blue-600 italic">V2</span>
                     </h1>
-                    <p className="text-zinc-500 mt-1">
-                        Resumen del estado operativo en tiempo{" "}
-                        <span className="text-blue-500 font-medium">real</span>.
+                    <p className="text-zinc-500 mt-1 font-medium italic uppercase tracking-tighter text-xs">
+                        Operaciones de alto rendimiento impulsadas por <span className="text-slate-900 dark:text-zinc-300 font-bold underline">Servimaquinas Engineering</span>
                     </p>
                 </div>
-
-                {/* Botones de acción — client component para interactividad */}
                 <DashboardActions orders={ordersForExport} />
             </div>
 
-            {/* Grid de Tarjetas */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {[
-                    {
-                        title: "Órdenes Activas",
-                        value: activeOrdersCount.toString(),
-                        trend: "En proceso ahora",
-                        href: "/dashboard/orders",
-                        icon: (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                <polyline points="14 2 14 8 20 8" />
-                            </svg>
-                        ),
-                        trendColor: "text-blue-600 dark:text-blue-400",
-                    },
-                    {
-                        title: "Clientes VIP",
-                        value: vipCustomersCount.toString(),
-                        trend: "Marcas Exclusivas",
-                        href: "/dashboard/customers",
-                        icon: (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                                <circle cx="9" cy="7" r="4" />
-                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                            </svg>
-                        ),
-                        trendColor: "text-amber-600 dark:text-amber-400",
-                    },
-                    {
-                        title: "Valor en Repuestos",
-                        value: `$${estimatedRevenue.toLocaleString("es-CO")}`,
-                        trend: "Total invertido",
-                        href: "/dashboard/inventory",
-                        icon: (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="12" y1="2" x2="12" y2="22" />
-                                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-                            </svg>
-                        ),
-                        trendColor: "text-emerald-600 dark:text-emerald-400",
-                    },
-                    {
-                        title: "Alertas de Inventario",
-                        value: inventoryAlertsCount.toString(),
-                        trend: inventoryAlertsCount > 0 ? "Requieren atención" : "Todo en stock",
-                        href: "/dashboard/inventory",
-                        icon: (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                                <line x1="12" y1="9" x2="12" y2="13" />
-                                <line x1="12" y1="17" x2="12.01" y2="17" />
-                            </svg>
-                        ),
-                        trendColor: inventoryAlertsCount > 0
-                            ? "text-red-600 dark:text-red-400"
-                            : "text-emerald-600 dark:text-emerald-400",
-                    },
-                ].map((stat, i) => (
-                    <Link key={i} href={stat.href}
-                        className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-6 shadow-sm flex flex-col justify-between group hover:border-slate-300 dark:hover:border-zinc-700 hover:shadow-md transition-all">
-                        <div className="flex items-start justify-between">
-                            <div>
-                                <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">{stat.title}</p>
-                                <p className="text-3xl font-extrabold text-slate-900 dark:text-white mt-2">{stat.value}</p>
-                            </div>
-                            <div className="p-3 bg-slate-50 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 rounded-2xl group-hover:bg-slate-100 dark:group-hover:bg-zinc-700 transition-colors">
-                                {stat.icon}
+            {/* BENTO GRID LAYOUT */}
+            <div className="grid grid-cols-1 md:grid-cols-12 grid-rows-auto gap-4">
+
+                {/* 1. Métricas Principales (Grid Izquierdo) */}
+                <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <StatsSmall
+                        title="Flujo Activo"
+                        value={activeOrdersCount}
+                        subtext="Equipos en taller"
+                        color="bg-blue-100 text-blue-600"
+                        icon={ClipboardList}
+                    />
+                    <StatsSmall
+                        title="Base VIP"
+                        value={vipCustomersCount}
+                        subtext="Fidelización activa"
+                        color="bg-amber-100 text-amber-600"
+                        icon={Users}
+                    />
+                    <StatsSmall
+                        title="Valor Invertido"
+                        value={`$${totalInventoryValue.toLocaleString()}`}
+                        subtext="Repuestos en tránsito"
+                        color="bg-emerald-100 text-emerald-600"
+                        icon={TrendingUp}
+                    />
+                    <StatsSmall
+                        title="Alertas Stock"
+                        value={inventoryAlertsCount}
+                        subtext={inventoryAlertsCount > 0 ? "Reponer urgente" : "Suministros OK"}
+                        color={inventoryAlertsCount > 0 ? "bg-red-100 text-red-600" : "bg-zinc-100 text-zinc-600"}
+                        icon={Package}
+                    />
+                </div>
+
+                {/* 2. Command Center (Botones Gigantes) - Centro Derecha */}
+                <div className="md:col-span-4 h-full">
+                    <CommandCenter />
+                </div>
+
+                {/* 3. Panel de Actividad Visual (Vertical Derecha) */}
+                <div className="md:col-span-4 lg:col-span-3 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2.5rem] p-6 shadow-sm overflow-hidden flex flex-col h-[500px]">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest italic">Live Feed</h2>
+                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                    </div>
+                    <ActivityTimeline items={timelineItems as any} />
+                </div>
+
+                {/* 4. Gráfico / Insights Operativos (Área Grande Inferior) */}
+                <div className="md:col-span-8 lg:col-span-9 bg-[#0073CF] rounded-[3rem] p-1 shadow-2xl overflow-hidden relative group">
+                    <div className="h-full w-full bg-white dark:bg-zinc-950 rounded-[2.8rem] p-8 flex flex-col md:flex-row items-center gap-8 border-4 border-transparent group-hover:border-blue-500/10 transition-all">
+                        <div className="flex-1">
+                            <h3 className="text-2xl font-black text-slate-900 dark:text-zinc-100 tracking-tighter uppercase italic leading-none mb-2">
+                                Performance <br /> de Ingeniería
+                            </h3>
+                            <p className="text-zinc-500 text-sm font-medium max-w-sm mb-6">
+                                El taller está operando al <span className="text-emerald-600 font-bold">87% de capacidad</span>. Se recomienda priorizar entregas pendientes de la marca <span className="font-bold underline italic text-slate-800 dark:text-zinc-200">Bosch Professional</span>.
+                            </p>
+                            <div className="flex gap-4">
+                                <div className="bg-zinc-50 dark:bg-zinc-900 px-4 py-3 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest italic leading-none mb-1">Reparado</p>
+                                    <p className="text-xl font-black text-slate-800 dark:text-zinc-200">2.4 days</p>
+                                </div>
+                                <div className="bg-zinc-50 dark:bg-zinc-900 px-4 py-3 rounded-2xl border border-zinc-100 dark:border-zinc-800">
+                                    <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest italic leading-none mb-1">Fidelidad</p>
+                                    <p className="text-xl font-black text-slate-800 dark:text-zinc-200">92%</p>
+                                </div>
                             </div>
                         </div>
-                        <p className={`text-xs font-bold mt-4 flex items-center gap-1.5 ${stat.trendColor}`}>
-                            <span className={`w-1.5 h-1.5 rounded-full bg-current ${inventoryAlertsCount > 0 && i === 3 ? "animate-pulse" : ""}`} />
-                            {stat.trend}
-                        </p>
-                    </Link>
-                ))}
+
+                        {/* Visual Placeholder for Graph (Technical Blueprint Look) */}
+                        <div className="w-full md:w-[300px] h-[180px] bg-slate-50 dark:bg-zinc-900 rounded-3xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 flex items-center justify-center relative overflow-hidden">
+                            <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '20px 20px' }} />
+                            <TrendingUp className="w-12 h-12 text-blue-500/20" />
+                            <p className="absolute bottom-4 text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Modulo Analytics Activo</p>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     );

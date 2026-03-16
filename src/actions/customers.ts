@@ -3,75 +3,71 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { auth } from "@/auth";
+import { ensureStaff, handleServerError } from "@/lib/security";
+import { customerSchema } from "@/lib/validations";
 
 export async function createCustomer(formData: FormData) {
-    const session = await auth();
-    if (!session || session.user.role === "TECNICO") return { error: "No autorizado." };
-
-    const documentId = formData.get("documentId") as string;
-    const firstName = formData.get("firstName") as string;
-    const lastName = formData.get("lastName") as string;
-    const email = formData.get("email") as string;
-    const phone = formData.get("phone") as string;
-    const isVIP = formData.get("isVIP") === "on";
-    const notes = formData.get("notes") as string;
-
-    if (!firstName || !lastName) {
-        return { error: "El nombre y apellido son obligatorios." };
-    }
-
     try {
-        if (email) {
-            const existingEmail = await prisma.customer.findUnique({ where: { email } });
+        await ensureStaff();
+
+        const rawData = {
+            firstName: formData.get("firstName") as string,
+            lastName: formData.get("lastName") as string,
+            email: formData.get("email") as string,
+            phone: formData.get("phone") as string,
+            documentId: formData.get("documentId") as string,
+            isVIP: formData.get("isVIP") === "on",
+            notes: formData.get("notes") as string,
+        };
+
+        const validated = customerSchema.parse(rawData);
+
+        if (validated.email) {
+            const existingEmail = await prisma.customer.findUnique({ where: { email: validated.email } });
             if (existingEmail) return { error: "Ya existe un cliente con este correo." };
         }
 
         await prisma.customer.create({
             data: {
-                documentId: documentId || null,
-                firstName, lastName,
-                email: email || null, phone: phone || null,
-                isVIP, notes: notes || null,
-                loyaltyPoints: isVIP ? 100 : 0
+                ...validated,
+                loyaltyPoints: validated.isVIP ? 100 : 0
             }
         });
 
+        revalidatePath("/dashboard/customers");
     } catch (error: any) {
-        return { error: "Error al crear el cliente en la base de datos." };
+        return handleServerError(error);
     }
 
-    revalidatePath("/dashboard/customers");
     redirect("/dashboard/customers");
 }
 
-// Versión sin redirect — para el modal de orden nueva (retorna el cliente creado)
 export async function createCustomerInline(formData: FormData) {
-    const session = await auth();
-    if (!session || session.user.role === "TECNICO") return { error: "No autorizado." };
-
-    const documentId = formData.get("documentId") as string;
-    const firstName = formData.get("firstName") as string;
-    const lastName = formData.get("lastName") as string;
-    const email = formData.get("email") as string;
-    const phone = formData.get("phone") as string;
-
-    if (!firstName || !lastName) {
-        return { error: "El nombre y apellido son obligatorios." };
-    }
-
     try {
-        if (email) {
-            const existing = await prisma.customer.findUnique({ where: { email } });
-            if (existing) return { error: "Ya existe un cliente con este correo." };
+        await ensureStaff();
+
+        const rawData = {
+            firstName: formData.get("firstName") as string,
+            lastName: formData.get("lastName") as string,
+            email: formData.get("email") as string,
+            phone: formData.get("phone") as string,
+        };
+
+        const validated = customerSchema.partial().parse(rawData);
+
+        if (validated.email) {
+            const existing = await prisma.customer.findUnique({ where: { email: validated.email } });
+            if (existing) throw new Error("Ya existe un cliente con este correo.");
         }
 
         const customer = await prisma.customer.create({
             data: {
-                documentId: documentId || null,
-                firstName, lastName,
-                email: email || null, phone: phone || null,
-                isVIP: false, loyaltyPoints: 0,
+                firstName: validated.firstName || "S/N",
+                lastName: validated.lastName || "S/N",
+                email: validated.email || null,
+                phone: validated.phone || null,
+                isVIP: false,
+                loyaltyPoints: 0,
             },
             select: { id: true, firstName: true, lastName: true, isVIP: true, phone: true, email: true },
         });
@@ -81,30 +77,29 @@ export async function createCustomerInline(formData: FormData) {
         return customer;
 
     } catch (error: any) {
-        return { error: "Error al crear el cliente." };
+        return handleServerError(error);
     }
 }
 
-
 export async function updateCustomer(id: string, formData: FormData) {
-    const session = await auth();
-    if (!session || session.user.role === "TECNICO") return { error: "No autorizado." };
-
-    const firstName = formData.get("firstName") as string;
-    const lastName = formData.get("lastName") as string;
-    const email = formData.get("email") as string;
-    const phone = formData.get("phone") as string;
-    const isVIP = formData.get("isVIP") === "on";
-    const notes = formData.get("notes") as string;
-
-    if (!firstName || !lastName) {
-        return { error: "El nombre y apellido son obligatorios." };
-    }
-
     try {
-        if (email) {
+        await ensureStaff();
+
+        const rawData = {
+            firstName: formData.get("firstName") as string,
+            lastName: formData.get("lastName") as string,
+            email: formData.get("email") as string,
+            phone: formData.get("phone") as string,
+            documentId: formData.get("documentId") as string,
+            isVIP: formData.get("isVIP") === "on",
+            notes: formData.get("notes") as string,
+        };
+
+        const validated = customerSchema.parse(rawData);
+
+        if (validated.email) {
             const existingEmail = await prisma.customer.findUnique({
-                where: { email }
+                where: { email: validated.email }
             });
             if (existingEmail && existingEmail.id !== id) {
                 return { error: "Ya existe otro cliente con este correo." };
@@ -113,30 +108,21 @@ export async function updateCustomer(id: string, formData: FormData) {
 
         await prisma.customer.update({
             where: { id },
-            data: {
-                firstName,
-                lastName,
-                email: email || null,
-                phone: phone || null,
-                isVIP,
-                notes: notes || null,
-            }
+            data: { ...validated }
         });
 
+        revalidatePath("/dashboard/customers");
     } catch (error: any) {
-        return { error: "Error al actualizar el cliente." };
+        return handleServerError(error);
     }
 
-    revalidatePath("/dashboard/customers");
     redirect("/dashboard/customers");
 }
 
 export async function deleteCustomer(id: string) {
-    const session = await auth();
-    if (!session || session.user.role === "TECNICO") return { error: "No autorizado." };
-
     try {
-        // Verificar si tiene órdenes
+        await ensureStaff();
+
         const hasOrders = await prisma.workOrder.findFirst({
             where: { customerId: id }
         });
@@ -145,13 +131,10 @@ export async function deleteCustomer(id: string) {
             return { error: "No se puede eliminar un cliente con historial de órdenes." };
         }
 
-        await prisma.customer.delete({
-            where: { id }
-        });
+        await prisma.customer.delete({ where: { id } });
+        revalidatePath("/dashboard/customers");
+        return { success: true };
     } catch (error: any) {
-        return { error: "Error al eliminar el cliente." };
+        return handleServerError(error);
     }
-
-    revalidatePath("/dashboard/customers");
-    return { success: true };
 }

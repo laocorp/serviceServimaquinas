@@ -4,7 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { OrderStatus } from "@prisma/client";
-import { auth } from "@/auth";
+import { ensureStaff, handleServerError } from "@/lib/security";
+import { orderSchema } from "@/lib/validations";
 
 // Generador de Código de Rastreo Aleatorio
 function generateTrackingCode() {
@@ -17,61 +18,55 @@ function generateTrackingCode() {
 }
 
 export async function createOrder(formData: FormData) {
-    const session = await auth();
-    if (!session || session.user.role === "TECNICO") return { error: "No autorizado." };
-
-    const customerId = formData.get("customerId") as string;
-    const createdById = formData.get("createdById") as string;
-    const deviceBrand = formData.get("deviceBrand") as string;
-    const deviceModel = formData.get("deviceModel") as string;
-    const deviceSerial = formData.get("deviceSerial") as string;
-    const reportedIssue = formData.get("reportedIssue") as string;
-
-    if (!customerId || !createdById || !deviceBrand || !deviceModel || !reportedIssue) {
-        return { error: "Faltan campos obligatorios para crear la orden." };
-    }
-
-    // Generar código único de rastreo
-    let trackingCode = generateTrackingCode();
-    let isUnique = false;
-
-    while (!isUnique) {
-        const existing = await prisma.workOrder.findUnique({ where: { trackingCode } });
-        if (!existing) {
-            isUnique = true;
-        } else {
-            trackingCode = generateTrackingCode();
-        }
-    }
-
     try {
+        await ensureStaff();
+
+        const rawData = {
+            customerId: formData.get("customerId") as string,
+            createdById: formData.get("createdById") as string,
+            deviceBrand: formData.get("deviceBrand") as string,
+            deviceModel: formData.get("deviceModel") as string,
+            deviceSerial: formData.get("deviceSerial") as string,
+            reportedIssue: formData.get("reportedIssue") as string,
+        };
+
+        const validated = orderSchema.parse(rawData);
+
+        // Generar código único de rastreo
+        let trackingCode = generateTrackingCode();
+        let isUnique = false;
+        let attempts = 0;
+
+        while (!isUnique && attempts < 10) {
+            const existing = await prisma.workOrder.findUnique({ where: { trackingCode } });
+            if (!existing) {
+                isUnique = true;
+            } else {
+                trackingCode = generateTrackingCode();
+                attempts++;
+            }
+        }
+
         await prisma.workOrder.create({
             data: {
+                ...validated,
                 trackingCode,
-                customerId,
-                createdById,
-                deviceBrand,
-                deviceModel,
-                deviceSerial: deviceSerial || null,
-                reportedIssue,
                 status: "PENDIENTE"
             }
         });
 
+        revalidatePath("/dashboard/orders");
     } catch (error: any) {
-        console.error("CREATE ORDER ERROR:", error);
-        return { error: "Error al crear la orden de trabajo en la base de datos." };
+        return handleServerError(error);
     }
 
-    revalidatePath("/dashboard/orders");
     redirect("/dashboard/orders");
 }
 
 export async function updateOrderStatus(orderId: string, status: OrderStatus, technicianId?: string) {
-    const session = await auth();
-    if (!session) return { error: "No autorizado." };
-
     try {
+        await ensureStaff();
+
         const data: any = { status };
         if (technicianId) {
             data.technicianId = technicianId;
@@ -86,29 +81,24 @@ export async function updateOrderStatus(orderId: string, status: OrderStatus, te
         revalidatePath("/dashboard/orders");
         return { success: true };
     } catch (error) {
-        return { error: "Error al actualizar el estado." };
+        return handleServerError(error);
     }
 }
 
 export async function addInventoryItemToOrder(orderId: string, inventoryItemId: string, quantity: number) {
-    const session = await auth();
-    if (!session || session.user.role === "RECEPCION") return { error: "No autorizado para añadir repuestos." };
-
     try {
-        // Transaction para asegurar que el stock baje correctamente o falle todo
-        await prisma.$transaction(async (tx: any) => {
-            // 1. Obtener item actual y verificar stock
-            const item = await tx.inventoryItem.findUnique({ where: { id: inventoryItemId } });
-            if (!item) throw new Error("Repuesto no encontrado.");
-            if (item.stock < quantity) throw new Error(`Stock insuficiente. Solo quedan ${item.stock} unidades.`);
+        await ensureStaff();
 
-            // 2. Descontar stock
+        await prisma.$transaction(async (tx: any) => {
+            const item = await tx.inventoryItem.findUnique({ where: { id: inventoryItemId } });
+            if (!item) throw new Error("Repuesto no encontrado en almacén.");
+            if (item.stock < quantity) throw new Error(`Stock insuficiente para ${item.name}.`);
+
             await tx.inventoryItem.update({
                 where: { id: inventoryItemId },
                 data: { stock: item.stock - quantity }
             });
 
-            // 3. Agregar elemento a la orden usando el precio en este momento exacto
             await tx.workOrderItem.create({
                 data: {
                     workOrderId: orderId,
@@ -122,34 +112,31 @@ export async function addInventoryItemToOrder(orderId: string, inventoryItemId: 
         revalidatePath(`/dashboard/orders/${orderId}`);
         return { success: true };
     } catch (error: any) {
-        return { error: error.message || "Error al asignar repuesto a la orden." };
+        return handleServerError(error);
     }
 }
 
 export async function createWorkReport(orderId: string, technicianId: string, formData: FormData) {
-    const session = await auth();
-    if (!session || session.user.role === "RECEPCION") return { error: "No autorizado para reportes técnicos." };
-
-    const diagnosis = formData.get("diagnosis") as string;
-    const actionsTaken = formData.get("actionsTaken") as string;
-    const recommendations = formData.get("recommendations") as string;
-    const imagesRaw = formData.get("images") as string; // JSON array string
-    let images: string[] = [];
-
     try {
-        if (imagesRaw) images = JSON.parse(imagesRaw);
-    } catch (e) {
-        images = [];
-    }
+        await ensureStaff();
 
-    if (!diagnosis || !actionsTaken) {
-        return { error: "Diagnóstico y acciones realizadas son obligatorios." };
-    }
+        const diagnosis = formData.get("diagnosis") as string;
+        const actionsTaken = formData.get("actionsTaken") as string;
+        const recommendations = formData.get("recommendations") as string;
+        const imagesRaw = formData.get("images") as string; // JSON array string
+        let images: string[] = [];
 
-    try {
-        // Verificar que la orden existe y cerrar su estado a 'REPARADO'
+        try {
+            if (imagesRaw) images = JSON.parse(imagesRaw);
+        } catch (e) {
+            images = [];
+        }
+
+        if (!diagnosis || !actionsTaken) {
+            throw new Error("Diagnóstico y acciones son obligatorios.");
+        }
+
         await prisma.$transaction(async (tx: any) => {
-            // Crear reporte
             await tx.workReport.create({
                 data: {
                     workOrderId: orderId,
@@ -161,7 +148,6 @@ export async function createWorkReport(orderId: string, technicianId: string, fo
                 }
             });
 
-            // Actualizar estado de orden
             await tx.workOrder.update({
                 where: { id: orderId },
                 data: { status: "REPARADO" }
@@ -171,6 +157,6 @@ export async function createWorkReport(orderId: string, technicianId: string, fo
         revalidatePath(`/dashboard/orders/${orderId}`);
         return { success: true };
     } catch (error: any) {
-        return { error: "Error al guardar el informe." };
+        return handleServerError(error);
     }
 }

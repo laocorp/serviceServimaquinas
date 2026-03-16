@@ -148,3 +148,27 @@ model SystemSettings {
   currency     String   @default("USD")
   updatedAt    DateTime @updatedAt
 }
+model StoreCategory {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Product {
+  id              String         @id @default(cuid())
+  name            String
+  description     String         @db.Text
+  price           Float
+  image           String?        // URL de la imagen (local /public/uploads/...)
+  isPromotion     Boolean        @default(false)
+  promoPrice      Float?         // Precio opcional de oferta
+  stock           Int            @default(0)
+  
+  categoryId      String?
+  storeCategory   StoreCategory? @relation(fields: [categoryId], references: [id])
+  
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}

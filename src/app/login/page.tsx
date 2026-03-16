@@ -2,37 +2,20 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { useState, useEffect, useTransition, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
-import { loginAction, registerAction } from "@/actions/auth";
+import { useTransition, Suspense } from "react";
+import { loginAction } from "@/actions/auth";
 import { toast } from "sonner";
 
 function LoginContent() {
-    const searchParams = useSearchParams();
-    const [isRegister, setIsRegister] = useState(false);
     const [isPending, startTransition] = useTransition();
-
-    useEffect(() => {
-        if (searchParams.get("tab") === "register") setIsRegister(true);
-    }, [searchParams]);
 
     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
         startTransition(async () => {
-            if (isRegister) {
-                const res = await registerAction(formData);
-                if (res?.error) toast.error(res.error);
-                else if (res?.success) {
-                    toast.success(res.success);
-                    setIsRegister(false);
-                    (e.target as HTMLFormElement).reset();
-                }
-            } else {
-                const res = await loginAction(formData);
-                if (res?.error) toast.error(res.error);
-                else toast.success("¡Bienvenido!");
-            }
+            const res = await loginAction(formData);
+            if (res?.error) toast.error(res.error);
+            else toast.success("¡Bienvenido!");
         });
     };
 
@@ -131,7 +114,6 @@ function LoginContent() {
                 </Link>
 
                 <motion.div
-                    key={isRegister ? "register" : "login"}
                     initial={{ opacity: 0, y: 16 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
@@ -145,74 +127,18 @@ function LoginContent() {
                             boxShadow: "0 24px 80px rgba(0,115,207,0.08)",
                         }}>
 
-                        {/* Tab switcher */}
-                        <div className="flex items-center gap-1 p-1 rounded-xl mb-8"
-                            style={{ backgroundColor: "rgba(0,115,207,0.08)", border: "1px solid rgba(0,115,207,0.14)" }}>
-                            {["Iniciar Sesión", "Registrarse"].map((tab, i) => {
-                                const active = isRegister === !!i;
-                                return (
-                                    <button
-                                        key={tab}
-                                        type="button"
-                                        onClick={() => setIsRegister(!!i)}
-                                        className="flex-1 py-2 text-sm font-semibold rounded-lg transition-all duration-200"
-                                        style={{
-                                            backgroundColor: active ? "#0073CF" : "transparent",
-                                            color: active ? "white" : "rgba(147,197,253,0.50)",
-                                        }}
-                                    >
-                                        {tab}
-                                    </button>
-                                );
-                            })}
-                        </div>
-
                         {/* Heading */}
                         <div className="mb-7">
                             <h1 className="text-2xl font-extrabold text-white tracking-tight">
-                                {isRegister ? "Crear cuenta" : "Bienvenido de vuelta"}
+                                Bienvenido de vuelta
                             </h1>
                             <p className="text-sm mt-1" style={{ color: "rgba(147,197,253,0.72)" }}>
-                                {isRegister
-                                    ? "Completa los datos para acceder al sistema."
-                                    : "Ingresa tus credenciales para continuar."}
+                                Ingresa tus credenciales para continuar.
                             </p>
                         </div>
 
                         {/* Form */}
                         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-
-                            {/* Nombre (solo registro) */}
-                            {isRegister && (
-                                <motion.div
-                                    initial={{ opacity: 0, height: 0 }}
-                                    animate={{ opacity: 1, height: "auto" }}
-                                    exit={{ opacity: 0, height: 0 }}
-                                    className="flex flex-col gap-1.5"
-                                >
-                                    <label className="text-xs font-semibold uppercase tracking-widest"
-                                        style={{ color: "rgba(147,197,253,0.55)" }}>
-                                        Nombre completo
-                                    </label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            name="name"
-                                            placeholder="Juan Pérez"
-                                            className="w-full pl-10 pr-4 py-3 rounded-xl text-sm text-white placeholder:text-blue-200/20 focus:outline-none transition-all"
-                                            style={{
-                                                backgroundColor: "rgba(0,115,207,0.08)",
-                                                border: "1px solid rgba(0,115,207,0.22)",
-                                            }}
-                                            onFocus={e => (e.currentTarget.style.borderColor = "rgba(0,115,207,0.60)")}
-                                            onBlur={e => (e.currentTarget.style.borderColor = "rgba(0,115,207,0.22)")}
-                                        />
-                                        <svg className="absolute left-3 top-1/2 -translate-y-1/2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(0,115,207,0.60)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
-                                        </svg>
-                                    </div>
-                                </motion.div>
-                            )}
 
                             {/* Email */}
                             <div className="flex flex-col gap-1.5">
@@ -247,14 +173,12 @@ function LoginContent() {
                                         style={{ color: "rgba(147,197,253,0.55)" }}>
                                         Contraseña
                                     </label>
-                                    {!isRegister && (
-                                        <Link href="#" className="text-xs transition-colors"
-                                            style={{ color: "rgba(0,115,207,0.70)" }}
-                                            onMouseEnter={e => (e.currentTarget.style.color = "#0073CF")}
-                                            onMouseLeave={e => (e.currentTarget.style.color = "rgba(0,115,207,0.70)")}>
-                                            ¿Olvidaste tu contraseña?
-                                        </Link>
-                                    )}
+                                    <Link href="#" className="text-xs transition-colors"
+                                        style={{ color: "rgba(0,115,207,0.70)" }}
+                                        onMouseEnter={e => (e.currentTarget.style.color = "#0073CF")}
+                                        onMouseLeave={e => (e.currentTarget.style.color = "rgba(0,115,207,0.70)")}>
+                                        ¿Olvidaste tu contraseña?
+                                    </Link>
                                 </div>
                                 <div className="relative">
                                     <input
@@ -297,7 +221,7 @@ function LoginContent() {
                                     </>
                                 ) : (
                                     <>
-                                        {isRegister ? "Crear cuenta" : "Ingresar al sistema"}
+                                        Ingresar al sistema
                                         <svg className="group-hover:translate-x-1 transition-transform" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                             <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
                                         </svg>

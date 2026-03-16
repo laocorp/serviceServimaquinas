@@ -1,86 +1,54 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-// ─── Paleta Bosch / Servimaquinas ─────────────────────────────────────────
-// bg-base:      #06111F  — Azul marino muy oscuro (fachada Bosch)
-// bg-elevated:  #0A1A2E  — Ligeramente más claro para secciones alternas
-// bg-card:      #0D2040  — Cards/nodos con algo más de azul
-// accent:       #0073CF  — Azul Bosch corporativo
-// accent-glow:  rgba(0,115,207,0.35) — Glow del estado activo
-// text-primary: white
-// border:       rgba(255,255,255,0.08) con tinte azul
+const COLORS = {
+  accent: "#0073CF", // Bosch Blue
+  accentHover: "#0060B0",
+  danger: "#E2001A", // Bosch Red
+  obsidian: "#0F172A", // Deep Navy/Slate
+  slate: "#64748B",
+  glass: "rgba(255, 255, 255, 0.7)",
+  border: "rgba(15, 23, 42, 0.06)",
+};
 
 const BRANDS = [
-  // Marcas principales
   "Bosch", "Ducati", "Goodyear", "Echo", "Shindaiwa", "Espa", "Pentax",
-  // Red Toolshop
-  "Ingco", "Total", "Emtop", "Wadfow", "Decakila",
-  "FTK", "Crown", "Worksite", "Nitro", "CMT", "Ixiar", "Dyllu",
-  "Bellota", "Carioca", "Wivarsson", "Tonka", "Fluidi", "Pearl",
+  "Ingco", "Total", "Emtop", "Wadfow", "Decakila", "Bellota"
 ];
 
-const STAGES = [
-  {
-    key: "RECIBIDO",
-    label: "Recibido",
-    sub: "Equipo en recepción",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="21 8 21 21 3 21 3 8" /><rect x="1" y="3" width="22" height="5" /><line x1="10" y1="12" x2="14" y2="12" />
-      </svg>
-    ),
-  },
-  {
-    key: "EN_REVISION",
-    label: "En Revisión",
-    sub: "Diagnóstico en curso",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-      </svg>
-    ),
-  },
-  {
-    key: "REPARANDO",
-    label: "Reparando",
-    sub: "En manos del técnico",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-      </svg>
-    ),
-  },
-  {
-    key: "ENTREGADO",
-    label: "Entregado",
-    sub: "¡Equipo listo!",
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
-    ),
-  },
-];
-
-const CHECK_ICON = (
-  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12" />
-  </svg>
-);
-
-export default function LandingPageClient({ settings }: { settings: any }) {
+export default function LandingPageClient({ settings, products }: { settings: any, products: any[] }) {
   const [trackingCode, setTrackingCode] = useState("");
-  const [demoState, setDemoState] = useState(1);
   const router = useRouter();
+  const companyName = settings?.companyName || "Servimaquinas";
+
+  // Carrusel Logic
+  const carouselRef = useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(true);
+
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (!carouselRef.current) return;
+    const scrollAmount = carouselRef.current.clientWidth * 0.8;
+    carouselRef.current.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth'
+    });
+  };
+
+  const handleScroll = () => {
+    if (!carouselRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current;
+    setShowLeftArrow(scrollLeft > 20);
+    setShowRightArrow(scrollLeft < (scrollWidth - clientWidth - 20));
+  };
 
   useEffect(() => {
-    const t = setInterval(() => setDemoState(p => (p + 1) % 4), 2400);
-    return () => clearInterval(t);
-  }, []);
+    handleScroll();
+  }, [products]);
 
   const handleTrack = (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,402 +56,458 @@ export default function LandingPageClient({ settings }: { settings: any }) {
     router.push(`/track/${trackingCode.trim().toUpperCase()}`);
   };
 
-  const companyName = settings?.companyName || "Servimaquinas";
-
   return (
-    <div className="min-h-screen text-white font-sans antialiased selection:bg-blue-500/20"
-      style={{ backgroundColor: "#06111F" }}>
+    <div className="min-h-screen font-sans selection:bg-blue-600/10 selection:text-blue-600 bg-white text-slate-900 overflow-x-hidden">
 
-      {/* ─── HEADER ─────────────────────────────────────────── */}
-      <header className="fixed top-0 w-full z-50 border-b border-blue-900/60 backdrop-blur-xl"
-        style={{ backgroundColor: "rgba(6,17,31,0.92)" }}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 border border-blue-600/40 rounded-lg flex items-center justify-center group-hover:border-blue-400/60 transition-colors"
-              style={{ backgroundColor: "rgba(0,115,207,0.12)" }}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <nav className="fixed top-0 w-full z-50 transition-all duration-500 bg-white/70 backdrop-blur-2xl border-b border-slate-100/50">
+        <div className="max-w-7xl mx-auto px-6 h-24 flex items-center justify-between">
+          <Link href="/" className="group flex items-center gap-4">
+            <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center shadow-2xl shadow-slate-900/20 group-hover:scale-110 transition-transform duration-500 rotate-[-5deg] group-hover:rotate-0">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
               </svg>
             </div>
-            <span className="font-bold text-[15px] tracking-tight text-white/88">{companyName}</span>
+            <div className="flex flex-col -gap-1">
+              <span className="font-black text-2xl tracking-tighter text-slate-950 uppercase leading-none">{companyName}</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 opacity-80">Engineering Elite</span>
+            </div>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-7">
-            {["Servicios", "Marcas", "Rastreo"].map(item => (
-              <a key={item} href={`#${item.toLowerCase()}`}
-                className="text-sm text-blue-200/65 hover:text-white transition-colors tracking-wide">
+          <div className="hidden lg:flex items-center gap-10">
+            {['Servicios', 'Tienda', 'Contacto'].map((item) => (
+              <a
+                key={item}
+                href={`#${item.toLowerCase()}`}
+                className="text-xs font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-all relative group"
+              >
                 {item}
+                <span className="absolute -bottom-2 left-0 w-0 h-0.5 bg-blue-600 transition-all group-hover:w-full" />
               </a>
             ))}
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <Link href="/login" className="text-sm text-blue-200/65 hover:text-white transition-colors">
-              Iniciar Sesión
-            </Link>
-            <Link href="/login?tab=register"
-              className="px-4 py-[7px] text-sm font-semibold rounded-full transition-all duration-200 text-white"
-              style={{ backgroundColor: "#0073CF", borderColor: "transparent" }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#0060B0")}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#0073CF")}>
-              Registrarse
+            <Link href="/login" className="relative group">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-500" />
+              <div className="relative px-8 py-3.5 bg-slate-950 text-white rounded-2xl text-xs font-black uppercase tracking-widest group-hover:bg-slate-900 transition-all">
+                Staff Access
+              </div>
             </Link>
           </div>
         </div>
-      </header>
+      </nav>
 
-      {/* ─── HERO ────────────────────────────────────────────── */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-6">
-
-        {/* Dot-matrix con tono azulado */}
-        <div className="absolute inset-0 pointer-events-none" style={{
-          backgroundImage: "radial-gradient(circle, rgba(0,115,207,0.09) 1px, transparent 1px)",
-          backgroundSize: "26px 26px",
-        }} />
-        {/* Vignette */}
-        <div className="absolute inset-0 pointer-events-none"
-          style={{ background: "radial-gradient(ellipse 80% 70% at 50% 50%, transparent, #06111F 90%)" }}
-        />
-        {/* Suave glow central azul */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-[500px] h-[300px] rounded-full blur-[100px] opacity-25"
-            style={{ backgroundColor: "#0073CF" }} />
+      <section className="relative pt-64 pb-40 overflow-hidden bg-slate-50">
+        {/* ELEMENTOS DE FONDO TÉCNICOS */}
+        <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-0 right-0 w-[60%] h-[120%] bg-[radial-gradient(circle_at_70%_20%,#0073CF15,transparent)]" />
+          <div className="absolute bottom-0 left-[-10%] w-[50%] h-[80%] bg-[radial-gradient(circle_at_30%_80%,#E2001A08,transparent)]" />
+          <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] bg-[linear-gradient(rgba(15,23,42,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(15,23,42,0.1)_1px,transparent_1px)] bg-[size:40px_40px]" />
         </div>
 
-        <div className="relative max-w-3xl w-full mx-auto text-center flex flex-col items-center gap-10 pt-20 pb-6">
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid lg:grid-cols-12 gap-16 items-center">
 
-          {/* Badge */}
-          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border"
-            style={{ borderColor: "rgba(0,115,207,0.35)", backgroundColor: "rgba(0,115,207,0.10)" }}>
-            <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#0073CF" }} />
-            <span className="text-[11px] uppercase tracking-[0.18em] text-blue-200/75 font-medium">Servicio Técnico Autorizado Bosch</span>
-          </motion.div>
-
-          {/* Heading */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.08 }}
-            className="flex flex-col items-center gap-3">
-            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-[0.92] tracking-tighter">
-              Tu equipo,<br />
-              <span style={{ color: "rgba(147,197,253,0.30)" }}>siempre a la vista.</span>
-            </h1>
-            <p className="text-blue-100/60 text-[17px] max-w-md leading-relaxed mt-1">
-              Rastrea tu reparación en tiempo real. Diagnóstico transparente y repuestos originales garantizados.
-            </p>
-          </motion.div>
-
-          {/* ─── TIMELINE ─── */}
-          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.18 }}
-            className="w-full">
-
-            {/* DESKTOP */}
-            <div className="hidden md:block w-full">
-              <div className="relative flex items-start justify-between w-full">
-
-                {/* Línea de track */}
-                <div className="absolute top-[27px] left-[12.5%] right-[12.5%] h-px overflow-hidden">
-                  <div className="absolute inset-0 rounded-full" style={{ backgroundColor: "rgba(0,115,207,0.20)" }} />
-                  <motion.div
-                    className="absolute inset-y-0 left-0 rounded-full"
-                    style={{ backgroundColor: "#0073CF" }}
-                    animate={{ width: `${(demoState / 3) * 100}%` }}
-                    transition={{ duration: 0.55, ease: [0.4, 0, 0.2, 1] }}
-                  />
+            <div className="lg:col-span-7 flex flex-col gap-10">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+                className="inline-flex items-center gap-3 px-5 py-2.5 bg-white border border-slate-200/60 rounded-2xl w-fit shadow-2xl shadow-blue-500/5 backdrop-blur-xl"
+              >
+                <div className="flex -space-x-2">
+                  {[1, 2, 3].map(i => (
+                    <div key={i} className="w-6 h-6 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center overflow-hidden">
+                      <div className="w-full h-full bg-blue-600 opacity-20" />
+                    </div>
+                  ))}
                 </div>
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">
+                  Trusted by <span className="text-slate-900">5,000+</span> Professional Technicians
+                </span>
+              </motion.div>
 
-                {STAGES.map((stage, i) => {
-                  const done = i < demoState;
-                  const active = i === demoState;
-                  const future = i > demoState;
+              <motion.div
+                initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                className="flex flex-col"
+              >
+                <h1 className="text-7xl md:text-9xl font-black leading-[0.85] tracking-[-0.04em] text-slate-950 mb-8">
+                  SERVICE<br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-700">REDEFINED</span>
+                </h1>
 
-                  return (
-                    <div key={stage.key} className="flex flex-col items-center gap-3.5 w-1/4 relative z-10">
+                <p className="text-xl md:text-2xl text-slate-500 max-w-xl font-medium leading-relaxed mb-12">
+                  Precisión alemana y tecnología de rastreo en vivo para tu equipo industrial pesado.
+                  <span className="text-slate-900"> El estándar de oro en reparación.</span>
+                </p>
 
-                      <div className="relative flex items-center justify-center">
-                        {/* Pulse ring — activo = azul Bosch */}
-                        {active && (
-                          <motion.span
-                            className="absolute w-[72px] h-[72px] rounded-full border"
-                            style={{ borderColor: "rgba(0,115,207,0.45)" }}
-                            animate={{ scale: [1, 1.6], opacity: [0.6, 0] }}
-                            transition={{ duration: 1.6, repeat: Infinity, ease: "easeOut" }}
-                          />
-                        )}
-
-                        <motion.div
-                          animate={{
-                            backgroundColor: active ? "rgba(0,115,207,0.18)" :
-                              done ? "rgba(0,115,207,0.10)" :
-                                "rgba(255,255,255,0.03)",
-                            borderColor: active ? "#0073CF" :
-                              done ? "rgba(0,150,220,0.60)" :
-                                "rgba(0,115,207,0.18)",
-                            boxShadow: active ? "0 0 24px 0 rgba(0,115,207,0.28)" : "none",
-                          }}
-                          transition={{ duration: 0.4 }}
-                          className="w-[54px] h-[54px] rounded-full border-2 flex items-center justify-center"
-                        >
-                          <motion.div
-                            animate={{
-                              color: active ? "#ffffff" :
-                                done ? "rgba(147,197,253,0.75)" :
-                                  "rgba(255,255,255,0.18)",
-                            }}
-                            transition={{ duration: 0.35 }}
-                          >
-                            {done ? CHECK_ICON : stage.icon}
-                          </motion.div>
-                        </motion.div>
+                <div className="flex flex-col sm:flex-row gap-6 items-start">
+                  <form onSubmit={handleTrack} className="group relative w-full max-w-md">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-[2rem] blur opacity-10 group-focus-within:opacity-30 transition duration-500" />
+                    <div className="relative flex p-2 bg-white rounded-[1.8rem] border border-slate-200 items-center overflow-hidden shadow-2xl">
+                      <div className="pl-6 text-slate-400">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                       </div>
+                      <input
+                        value={trackingCode}
+                        onChange={e => setTrackingCode(e.target.value.toUpperCase())}
+                        placeholder="Tracking ID: SRV-ABC123"
+                        className="flex-1 px-4 py-4 outline-none font-bold text-lg placeholder:text-slate-300 tracking-wider"
+                      />
+                      <button className="bg-slate-950 text-white px-8 py-4 rounded-[1.4rem] text-sm font-black uppercase tracking-widest hover:bg-blue-600 transition-all active:scale-95">
+                        Track Now
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </motion.div>
+            </div>
 
-                      <div className="text-center select-none">
-                        <motion.p
-                          animate={{ opacity: future ? 0.18 : active ? 1 : 0.55 }}
-                          transition={{ duration: 0.35 }}
-                          className="text-sm font-semibold text-white leading-none">
-                          {stage.label}
-                        </motion.p>
-                        <motion.p
-                          animate={{ opacity: future ? 0.08 : active ? 0.42 : 0.25 }}
-                          transition={{ duration: 0.35 }}
-                          className="text-xs text-blue-100/65 mt-1">
-                          {stage.sub}
-                        </motion.p>
+            <div className="lg:col-span-5 relative hidden lg:block">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, rotate: 10 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                className="relative z-10"
+              >
+                <div className="absolute -top-20 -left-20 w-64 h-64 bg-blue-100 rounded-full blur-[100px] opacity-40 animate-pulse" />
+                <div className="relative bg-white p-4 rounded-[3.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.15)] border border-slate-100 overflow-hidden group">
+                  <img
+                    src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80&w=1000"
+                    className="rounded-[2.8rem] object-cover h-[550px] w-full group-hover:scale-105 transition-transform duration-1000"
+                    alt="Precision Engineering"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+
+                  <div className="absolute bottom-10 left-10 right-10 flex gap-4">
+                    <div className="flex-1 bg-white/10 backdrop-blur-xl border border-white/20 p-6 rounded-3xl">
+                      <span className="block text-white text-xs font-black uppercase tracking-widest opacity-60 mb-2">Diagnosis Speed</span>
+                      <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }} whileInView={{ width: "94%" }}
+                          className="h-full bg-blue-500 shadow-[0_0_15px_#3b82f6]"
+                        />
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                    <div className="bg-blue-600 p-6 rounded-3xl flex items-center justify-center aspect-square shadow-2xl">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
 
-              <p className="text-center mt-5 text-[10px] tracking-widest uppercase"
-                style={{ color: "rgba(147,197,253,0.40)" }}>
-                Demostración · Así verás el estado de tu equipo en tiempo real
+          </div>
+        </div>
+      </section>
+
+      <section id="servicios" className="py-40 relative bg-white">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col md:flex-row md:items-end justify-between mb-24 gap-8">
+            <div className="flex flex-col gap-4">
+              <motion.span
+                initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }}
+                className="text-xs font-black uppercase tracking-[0.4em] text-blue-600"
+              >
+                Technical Mastery
+              </motion.span>
+              <h3 className="text-5xl md:text-6xl font-black tracking-tighter text-slate-950">
+                Soluciones de Ingeniería.
+              </h3>
+            </div>
+            <p className="text-xl text-slate-500 max-w-sm leading-relaxed border-l-2 border-slate-100 pl-8">
+              Mantenimiento de alta precisión para las marcas líderes de la industria.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-6 grid-rows-2 gap-6 h-auto md:h-[700px]">
+            {/* CARD 1: LARGE FEATURE */}
+            <motion.div
+              whileHover={{ y: -10 }}
+              className="md:col-span-3 md:row-span-2 bg-slate-950 rounded-[3rem] p-12 lg:p-16 text-white relative overflow-hidden group shadow-2xl"
+            >
+              <div className="absolute top-0 right-0 w-full h-full opacity-10 bg-[radial-gradient(circle_at_100%_0%,#0073CF,transparent)]" />
+              <div className="relative z-10 h-full flex flex-col justify-between">
+                <div>
+                  <div className="w-16 h-16 bg-white/10 backdrop-blur-xl rounded-2xl flex items-center justify-center mb-10 border border-white/10 group-hover:scale-110 transition-transform">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>
+                  </div>
+                  <h4 className="text-5xl font-black mb-8 leading-tight tracking-tight">Especialistas en <br /><span className="text-blue-500">Alta Potencia.</span></h4>
+                  <p className="text-slate-400 text-lg leading-relaxed max-w-md">Diagnóstico avanzado asistido por software para herramientas Bosch Professional y equipo industrial pesado.</p>
+                </div>
+
+                <div className="mt-12 flex items-center gap-6">
+                  <div className="flex -space-x-3">
+                    {[1, 2, 3, 4].map(i => (
+                      <div key={i} className="w-10 h-10 rounded-full border-2 border-slate-900 bg-slate-800" />
+                    ))}
+                  </div>
+                  <span className="text-sm font-bold text-slate-500 italic">Certificado por Bosch Global</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* CARD 2: MEDIUM FEATURE (BLUE) */}
+            <motion.div
+              whileHover={{ y: -10 }}
+              className="md:col-span-3 bg-blue-600 rounded-[3rem] p-12 text-white relative overflow-hidden group shadow-2xl shadow-blue-600/20"
+            >
+              <div className="relative z-10 flex flex-col justify-between h-full">
+                <h4 className="text-3xl font-black leading-tight">Garantía de Repuestos <br />100% Originales.</h4>
+                <div className="flex items-center justify-between mt-8">
+                  <span className="text-sm font-bold opacity-80 uppercase tracking-widest">Inventory Stocked</span>
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /></svg>
+                </div>
+              </div>
+              <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-3xl" />
+            </motion.div>
+
+            {/* CARD 3: SMALL FEATURE (WHITE/SLATE) */}
+            <motion.div
+              whileHover={{ y: -10 }}
+              className="md:col-span-2 bg-slate-50 border border-slate-100 rounded-[3rem] p-10 flex flex-col justify-between group shadow-xl"
+            >
+              <div className="w-12 h-12 bg-red-500 rounded-2xl flex items-center justify-center text-white mb-6">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+              </div>
+              <div>
+                <h5 className="text-xl font-black text-slate-950 mb-2">Entrega Express</h5>
+                <p className="text-slate-500 text-sm">Servicio de logística puerta a puerta a nivel nacional.</p>
+              </div>
+            </motion.div>
+
+            {/* CARD 4: SMALL FEATURE (ACCENT) */}
+            <motion.div
+              whileHover={{ y: -10 }}
+              className="md:col-span-1 bg-white border-2 border-blue-50 rounded-[3rem] p-10 flex flex-col items-center justify-center text-center group hover:border-blue-200 transition-all shadow-xl"
+            >
+              <span className="text-4xl font-black text-blue-600 mb-2">24h</span>
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-tight">SLA de <br />Diagnóstico</p>
+            </motion.div>
+
+          </div>
+        </div>
+      </section>
+
+      <section id="tienda" className="py-40 bg-slate-50 relative overflow-hidden">
+        {/* TEXTURA TÉCNICA DE FONDO */}
+        <div className="absolute top-0 left-0 w-full h-full opacity-[0.03] pointer-events-none"
+          style={{ backgroundImage: 'radial-gradient(#0073CF 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
+
+        <div className="max-w-7xl mx-auto px-6 mb-24 relative z-10">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12">
+            <div className="flex flex-col gap-6">
+              <div className="flex items-center gap-3">
+                <span className="w-12 h-[2px] bg-blue-600" />
+                <span className="text-xs font-black uppercase tracking-[0.5em] text-blue-600">Industrial Selection</span>
+              </div>
+              <h3 className="text-5xl md:text-7xl font-black tracking-tighter text-slate-950 max-w-2xl">
+                Catálogo de <br /><span className="text-blue-600">Alta Gama.</span>
+              </h3>
+            </div>
+            <p className="text-xl text-slate-500 max-w-sm font-medium leading-relaxed">
+              Herramientas diseñadas para el rendimiento extremo. Disponibilidad inmediata con respaldo técnico oficial.
+            </p>
+          </div>
+        </div>
+
+        {products.length === 0 ? (
+          <div className="text-center py-32 text-slate-400 font-bold uppercase tracking-widest text-sm italic">
+            No stock listed at this moment.
+          </div>
+        ) : (
+          <div className="relative group/carousel">
+            <div
+              ref={carouselRef}
+              onScroll={handleScroll}
+              className="flex gap-10 overflow-x-auto snap-x snap-mandatory scrollbar-hide px-[max(24px,calc((100vw-1280px)/2))] py-12"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {products.map((item) => (
+                <motion.div
+                  key={item.id}
+                  whileHover={{ y: -15 }}
+                  className="snap-center shrink-0 w-[380px] group bg-white rounded-[3.5rem] border border-slate-100/50 overflow-hidden shadow-[0_20px_50px_-20px_rgba(0,0,0,0.05)] hover:shadow-[0_40px_80px_-20px_rgba(0,115,207,0.15)] transition-all duration-700"
+                >
+                  <div className="aspect-[4/5] bg-slate-50 relative overflow-hidden p-10 flex flex-col justify-center">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,1),rgba(241,245,249,0.5))]" />
+                    {item.image && (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="object-contain w-full h-full relative z-10 group-hover:scale-110 transition-transform duration-1000 rotate-[-5deg] group-hover:rotate-0"
+                      />
+                    )}
+
+                    {item.isPromotion && (
+                      <div className="absolute top-10 left-10 z-20">
+                        <div className="bg-red-600 text-white text-[10px] font-black px-5 py-2 rounded-full uppercase tracking-tighter shadow-2xl flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping" />
+                          Elite Offer
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="absolute bottom-6 left-10 right-10 flex justify-between items-center z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                      <span className="text-[10px] font-black uppercase text-slate-400">SKU: {item.id.slice(-8)}</span>
+                      <div className="flex gap-1">
+                        {[1, 2, 3, 4, 5].map(i => <div key={i} className="w-1 h-1 bg-blue-600 rounded-full" />)}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-12">
+                    <div className="flex justify-between items-start mb-6">
+                      <div>
+                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-2">{item.storeCategory?.name || "Official Edition"}</p>
+                        <h4 className="text-2xl font-black text-slate-950 leading-tight line-clamp-2 h-16">{item.name}</h4>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between mt-10">
+                      <div className="flex flex-col">
+                        {item.promoPrice ? (
+                          <>
+                            <span className="text-xs text-slate-400 line-through font-bold mb-1">${item.price.toLocaleString()}</span>
+                            <span className="text-4xl font-black text-slate-950 tracking-tighter">${item.promoPrice.toLocaleString()}</span>
+                          </>
+                        ) : (
+                          <span className="text-4xl font-black text-slate-950 tracking-tighter">${item.price.toLocaleString()}</span>
+                        )}
+                      </div>
+                      <a
+                        href={`https://wa.me/${settings?.phone || ''}?text=Hola, estoy interesado en ${item.name}`}
+                        target="_blank"
+                        className="w-16 h-16 bg-slate-950 text-white rounded-3xl flex items-center justify-center hover:bg-blue-600 transition-all shadow-2xl active:scale-90 group/btn"
+                      >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" className="group-hover:translate-x-1 transition-transform">
+                          <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* CONTROLES TÉCNICOS */}
+            <AnimatePresence>
+              {showLeftArrow && (
+                <motion.button
+                  initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                  onClick={() => scrollCarousel('left')}
+                  className="absolute left-10 top-1/2 -translate-y-1/2 w-20 h-20 bg-white/80 backdrop-blur-2xl shadow-2xl rounded-[2rem] flex items-center justify-center z-20 border border-slate-100 hover:bg-slate-950 hover:text-white transition-all duration-500 active:scale-95"
+                >
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="15 18 9 12 15 6" /></svg>
+                </motion.button>
+              )}
+              {showRightArrow && (
+                <motion.button
+                  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }}
+                  onClick={() => scrollCarousel('right')}
+                  className="absolute right-10 top-1/2 -translate-y-1/2 w-20 h-20 bg-white/80 backdrop-blur-2xl shadow-2xl rounded-[2rem] flex items-center justify-center z-20 border border-slate-100 hover:bg-slate-950 hover:text-white transition-all duration-500 active:scale-95"
+                >
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="9 18 15 12 9 6" /></svg>
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+      </section>
+
+      <section id="contacto" className="py-40 relative bg-white overflow-hidden">
+        <div className="absolute top-0 right-0 w-[40%] h-full bg-slate-50 z-0 hidden lg:block" />
+
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
+          <div className="grid lg:grid-cols-12 gap-0 bg-slate-950 rounded-[4rem] overflow-hidden shadow-[0_50px_100px_-20px_rgba(15,23,42,0.3)]">
+
+            <div className="lg:col-span-7 p-12 lg:p-24 text-white relative">
+              <div className="absolute top-0 left-0 w-full h-full opacity-10 bg-[radial-gradient(circle_at_0%_0%,#0073CF,transparent)]" />
+              <motion.div
+                initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }}
+                className="relative z-10"
+              >
+                <span className="text-[10px] font-black uppercase tracking-[0.5em] text-blue-500 mb-6 block">Direct Assistance</span>
+                <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-10 leading-none">
+                  ¿Listo para la <br /><span className="text-blue-500">Excelencia?</span>
+                </h2>
+                <p className="text-slate-400 text-xl leading-relaxed max-w-md mb-16 font-medium">
+                  Nuestro laboratorio técnico está operando bajo estándares internacionales. Agenda tu diagnóstico premium ahora.
+                </p>
+
+                <div className="flex flex-col gap-10">
+                  <div className="flex items-center gap-6 group">
+                    <div className="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center border border-white/10 group-hover:bg-blue-600/20 transition-all">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1">Expert Support</p>
+                      <p className="text-xl font-bold">{settings?.phone || "+593 98 337 9649"}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-6 group">
+                    <div className="w-16 h-16 bg-emerald-500 rounded-3xl flex items-center justify-center shadow-2xl shadow-emerald-500/20 group-hover:scale-110 transition-all">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><path d="M3 21l1.65-3.8A9 9 0 1121 12a9 9 0 01-9 9 8.9 8.9 0 01-4.5-1.2L3 21z" /></svg>
+                    </div>
+                    <a href={`https://wa.me/${settings?.phone || ''}`} className="text-2xl font-black underline decoration-blue-500 underline-offset-8 decoration-4 hover:text-blue-500 transition-colors">
+                      WhatsApp Business
+                    </a>
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            <div className="lg:col-span-5 relative h-[500px] lg:h-auto">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d249.328!2d-80.7116201!3d-0.9610996!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x902be7e3da48cb73%3A0xb4db965f8fbd7670!2sSERVIMAQUINAS%20Servicio%20t%C3%A9cnico%20autorizado!5e0!3m2!1sen!2sec!4v1742084232328!5m2!1sen!2sec"
+                width="100%" height="100%" style={{ border: 0 }} allowFullScreen={true} loading="lazy"
+                className="grayscale brightness-[0.7] contrast-[1.2] hover:grayscale-0 transition-all duration-1000"
+              ></iframe>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FOOTER ────────────────────────────────────────── */}
+      <footer className="py-32 bg-slate-50 border-t border-slate-100">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="grid lg:grid-cols-12 gap-20 mb-32">
+            <div className="lg:col-span-5 flex flex-col gap-8">
+              <Link href="/" className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-slate-950 rounded-2xl flex items-center justify-center text-white font-black text-2xl">S</div>
+                <span className="font-black text-3xl tracking-tighter uppercase text-slate-950">{companyName}</span>
+              </Link>
+              <p className="text-slate-500 font-medium text-lg leading-relaxed">
+                Ingeniería y soporte técnico de precisión. Distribuidor oficial autorizado de equipos de alta gama para la industria del mañana.
               </p>
             </div>
 
-            {/* MOBILE */}
-            <div className="md:hidden flex flex-col gap-2.5">
-              {STAGES.map((stage, i) => {
-                const active = i === demoState;
-                const future = i > demoState;
-                return (
-                  <motion.div key={stage.key}
-                    animate={{
-                      backgroundColor: active ? "rgba(0,115,207,0.12)" : "transparent",
-                      borderColor: active ? "rgba(0,115,207,0.42)" : "rgba(0,115,207,0.14)",
-                    }}
-                    transition={{ duration: 0.35 }}
-                    className="flex items-center gap-3.5 px-4 py-3 rounded-2xl border">
-                    <div className="w-9 h-9 rounded-full border-2 flex items-center justify-center flex-shrink-0"
-                      style={{ borderColor: active ? "#0073CF" : "rgba(0,115,207,0.20)" }}>
-                      <div style={{ opacity: future ? 0.18 : active ? 0.92 : 0.50 }}>
-                        {i < demoState ? CHECK_ICON : stage.icon}
-                      </div>
-                    </div>
-                    <div className="text-left">
-                      <p className={`text-sm font-semibold ${active ? "text-white" : "text-white/35"}`}>{stage.label}</p>
-                      <p className={`text-xs mt-0.5 ${active ? "text-blue-200/45" : "text-blue-200/16"}`}>{stage.sub}</p>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </motion.div>
-
-          {/* Tracker form */}
-          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.32 }}
-            className="w-full max-w-sm flex flex-col gap-2.5">
-            <form onSubmit={handleTrack} className="flex gap-2">
-              <input
-                type="text"
-                value={trackingCode}
-                onChange={e => setTrackingCode(e.target.value.toUpperCase())}
-                placeholder="Tu código · SRV-XXXXXX"
-                maxLength={12}
-                className="flex-1 rounded-2xl px-5 py-3.5 text-sm font-mono tracking-widest text-white focus:outline-none transition-all text-center"
-                style={{
-                  backgroundColor: "rgba(0,115,207,0.10)",
-                  border: "1px solid rgba(0,115,207,0.28)",
-                  color: "white",
-                }}
-                onFocus={e => (e.currentTarget.style.borderColor = "rgba(0,115,207,0.60)")}
-                onBlur={e => (e.currentTarget.style.borderColor = "rgba(0,115,207,0.28)")}
-              />
-              <button type="submit"
-                className="px-5 py-3.5 rounded-2xl text-sm font-bold active:scale-[0.97] transition-all whitespace-nowrap text-white"
-                style={{ backgroundColor: "#0073CF" }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#0060B0")}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#0073CF")}>
-                Ver Estado
-              </button>
-            </form>
-
-            {/* Brand pills */}
-            <div className="flex flex-wrap gap-1.5 justify-center pt-0.5">
-              {BRANDS.map(b => (
-                <span key={b} className="px-2.5 py-0.5 text-[10px] font-medium rounded-full"
-                  style={{ color: "rgba(147,197,253,0.35)", border: "1px solid rgba(0,115,207,0.18)" }}>
-                  {b}
-                </span>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ─── SERVICIOS ─────────────────────────────────────── */}
-      <section id="servicios" className="py-24 lg:py-32" style={{ borderTop: "1px solid rgba(0,115,207,0.18)" }}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <p className="text-[11px] uppercase tracking-[0.18em] mb-3" style={{ color: "rgba(147,197,253,0.60)" }}>
-            Lo que hacemos
-          </p>
-          <h2 className="text-3xl lg:text-4xl font-bold text-white/78 max-w-xl mb-14 leading-tight">
-            Un servicio técnico completo, sin compromisos.
-          </h2>
-
-          <div className="grid md:grid-cols-3 gap-px rounded-3xl overflow-hidden"
-            style={{ background: "rgba(0,115,207,0.12)" }}>
-            {[
-              {
-                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></svg>,
-                title: "Garantía Post-Reparación",
-                desc: "Cada trabajo sale con respaldo oficial. Si algo falla, regresa sin costo.",
-              },
-              {
-                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
-                title: "Rastreo en Tiempo Real",
-                desc: "Código único por orden. Ve el estado actualizado sin necesidad de llamar.",
-              },
-              {
-                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" /></svg>,
-                title: "Repuestos 100% Originales",
-                desc: "Bodega certificada. Sin piezas genéricas, sin sorpresas en el diagnóstico.",
-              }
-            ].map((item, i) => (
-              <div key={i} className="p-8 lg:p-10 group transition-colors"
-                style={{ backgroundColor: "#06111F" }}
-                onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#0A1A2E")}
-                onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#06111F")}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-6 transition-all"
-                  style={{ border: "1px solid rgba(0,115,207,0.25)", color: "rgba(147,197,253,0.50)" }}>
-                  {item.icon}
-                </div>
-                <h3 className="text-sm font-semibold mb-2" style={{ color: "rgba(255,255,255,0.85)" }}>{item.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: "rgba(147,197,253,0.60)" }}>{item.desc}</p>
+            <div className="lg:col-span-7 grid md:grid-cols-3 gap-12">
+              <div className="flex flex-col gap-6">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600">Marcas de Élite</p>
+                <ul className="flex flex-col gap-3">
+                  {BRANDS.slice(0, 6).map(b => (
+                    <li key={b} className="font-bold text-slate-400 hover:text-slate-950 transition-colors cursor-default">{b}</li>
+                  ))}
+                </ul>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── MARCAS ────────────────────────────────────────── */}
-      <section id="marcas" className="py-24 lg:py-32" style={{ borderTop: "1px solid rgba(0,115,207,0.18)", backgroundColor: "#0A1A2E" }}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 grid lg:grid-cols-2 gap-16 items-center">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] mb-3" style={{ color: "rgba(147,197,253,0.60)" }}>Taller Multimarca</p>
-            <h2 className="text-3xl lg:text-4xl font-bold text-white/78 leading-tight mb-5">
-              Especialistas en Bosch.<br />Aceptamos todo.
-            </h2>
-            <p className="text-base leading-relaxed max-w-md mb-8" style={{ color: "rgba(147,197,253,0.65)" }}>
-              Certificados en la línea Bosch, pero también atendemos Emtop, Total, Ingco, Wadfow, Decakila y más. Un técnico que conoce el equipo lo repara bien.
-            </p>
-            <Link href="/login?tab=register"
-              className="inline-flex items-center gap-2 text-sm font-semibold transition-colors group"
-              style={{ color: "#58A8E8" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "white")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#58A8E8")}>
-              Registra tu equipo
-              <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
-              </svg>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2">
-            {BRANDS.map((brand, i) => (
-              <motion.div key={brand}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.035, duration: 0.4 }}
-                className="p-3 rounded-xl transition-all cursor-default text-center"
-                style={{
-                  border: brand === "Bosch" ? "1px solid rgba(0,115,207,0.55)" : "1px solid rgba(0,115,207,0.15)",
-                  backgroundColor: brand === "Bosch" ? "rgba(0,115,207,0.15)" : "rgba(0,115,207,0.05)",
-                }}>
-                <span className="font-semibold text-xs" style={{ color: brand === "Bosch" ? "rgba(147,197,253,0.90)" : "rgba(147,197,253,0.38)" }}>
-                  {brand}
-                </span>
-                {brand === "Bosch" && (
-                  <p className="text-[8px] mt-0.5 uppercase tracking-widest" style={{ color: "rgba(0,115,207,0.70)" }}>Principal</p>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ─── TRACKER CTA ─────────────────────────────────── */}
-      <section id="rastreo" className="py-24 lg:py-32 relative overflow-hidden"
-        style={{ borderTop: "1px solid rgba(0,115,207,0.18)" }}>
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          <div className="w-[400px] h-[200px] rounded-full blur-3xl opacity-20"
-            style={{ backgroundColor: "#0073CF" }} />
-        </div>
-        <div className="relative max-w-lg mx-auto px-6 text-center">
-          <p className="text-[11px] uppercase tracking-[0.18em] mb-4" style={{ color: "rgba(147,197,253,0.60)" }}>Consulta tu orden</p>
-          <h2 className="text-3xl lg:text-4xl font-bold text-white/78 mb-3">¿Dónde está tu equipo?</h2>
-          <p className="text-sm leading-relaxed mb-8 max-w-sm mx-auto" style={{ color: "rgba(147,197,253,0.65)" }}>
-            Usa el código del recibo para ver el diagnóstico y estado actual de tu reparación.
-          </p>
-          <form onSubmit={handleTrack} className="flex gap-2 max-w-sm mx-auto">
-            <input
-              type="text"
-              value={trackingCode}
-              onChange={e => setTrackingCode(e.target.value.toUpperCase())}
-              placeholder="SRV-XXXXXX"
-              maxLength={12}
-              className="flex-1 rounded-2xl px-5 py-4 text-sm font-mono tracking-widest text-white focus:outline-none transition-all text-center"
-              style={{
-                backgroundColor: "rgba(0,115,207,0.10)",
-                border: "1px solid rgba(0,115,207,0.28)",
-              }}
-              onFocus={e => (e.currentTarget.style.borderColor = "rgba(0,115,207,0.60)")}
-              onBlur={e => (e.currentTarget.style.borderColor = "rgba(0,115,207,0.28)")}
-            />
-            <button type="submit"
-              className="px-5 py-4 rounded-2xl text-sm font-bold active:scale-[0.97] transition-all text-white"
-              style={{ backgroundColor: "#0073CF" }}
-              onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#0060B0")}
-              onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#0073CF")}>
-              Ver Estado
-            </button>
-          </form>
-        </div>
-      </section>
-
-      {/* ─── FOOTER ──────────────────────────────────────── */}
-      <footer style={{ borderTop: "1px solid rgba(0,115,207,0.18)", backgroundColor: "#0A1A2E" }}>
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-10 flex flex-col md:flex-row items-center justify-between gap-5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-md flex items-center justify-center"
-              style={{ border: "1px solid rgba(0,115,207,0.30)", backgroundColor: "rgba(0,115,207,0.12)" }}>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-50">
-                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
-              </svg>
+              <div className="flex flex-col gap-6">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600">Ubicación</p>
+                <p className="font-bold text-slate-500 leading-relaxed">
+                  {settings?.address || 'Manta, Av 4 de Noviembre y Calle J16'}
+                </p>
+              </div>
+              <div className="flex flex-col gap-6 text-right md:text-left">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600">Oficial</p>
+                <p className="font-bold text-slate-400">©{new Date().getFullYear()} Precision Systems.</p>
+                <div className="flex gap-4 justify-end md:justify-start mt-2">
+                  {[1, 2, 3].map(i => <div key={i} className="w-8 h-8 rounded-lg bg-slate-200" />)}
+                </div>
+              </div>
             </div>
-            <span className="text-sm font-semibold" style={{ color: "rgba(147,197,253,0.70)" }}>{companyName}</span>
           </div>
 
-          <div className="flex items-center gap-5 text-xs" style={{ color: "rgba(147,197,253,0.55)" }}>
-            {settings?.phone && <span>{settings.phone}</span>}
-            {settings?.email && <span>{settings.email}</span>}
-            {settings?.address && <span>{settings.address}</span>}
+          <div className="pt-12 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6">
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 text-center">Certified Technical Laboratory & Industrial Supply</span>
+            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-950">Manta • Ecuador • 2026</span>
           </div>
-
-          <p className="text-xs" style={{ color: "rgba(147,197,253,0.45)" }}>
-            © {new Date().getFullYear()} {companyName}. Todos los derechos reservados.
-          </p>
         </div>
       </footer>
     </div>

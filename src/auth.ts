@@ -39,8 +39,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         where: { email: credentials.email as string }
                     });
 
-                    if (!user) {
-                        console.error("AUTH: Usuario no encontrado:", credentials.email);
+                    if (!user || !user.password) {
+                        console.error("AUTH: Usuario no encontrado o sin password:", credentials.email);
                         return null;
                     }
 

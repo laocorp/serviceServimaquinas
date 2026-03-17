@@ -18,31 +18,39 @@ export const categorySchema = z.object({
 
 // ─── ESQUEMAS DE CLIENTES ─────────────────────────────
 export const customerSchema = z.object({
-    firstName: z.string().min(2, "Nombre requerido"),
-    lastName: z.string().min(2, "Apellido requerido"),
+    name: z.string().min(2, "Nombre requerido"),
     email: z.string().email("Email inválido").nullable().optional().or(z.literal("")),
     phone: z.string().nullable().optional(),
-    documentId: z.string().min(5, "Documento inválido").nullable().optional(),
+    dni: z.string().min(5, "Documento inválido").nullable().optional(),
+    address: z.string().nullable().optional(),
     isVIP: z.boolean().default(false),
-    notes: z.string().nullable().optional(),
 });
 
 // ─── ESQUEMAS DE INVENTARIO ──────────────────────────
 export const inventorySchema = z.object({
-    code: z.string().min(3, "Código de repuesto requerido"),
     name: z.string().min(3, "Nombre de repuesto requerido"),
+    sku: z.string().min(3, "SKU requerido"),
     description: z.string().optional(),
-    price: z.number().positive(),
-    stock: z.number().int().nonnegative(),
-    minStock: z.number().int().nonnegative().default(5),
+    unitPrice: z.number().positive(),
+    quantity: z.number().int().nonnegative(),
+    minQuantity: z.number().int().nonnegative().default(5),
 });
 
 // ─── ESQUEMAS DE ÓRDENES ─────────────────────────────
 export const orderSchema = z.object({
-    customerId: z.string().uuid(),
-    createdById: z.string().uuid(),
-    deviceBrand: z.string().min(2),
-    deviceModel: z.string().min(2),
-    deviceSerial: z.string().nullable().optional(),
-    reportedIssue: z.string().min(10, "Por favor describa mejor la falla"),
+    customerId: z.string().min(1),
+    creatorId: z.string().min(1),
+    technicianId: z.string().nullable().optional(),
+    equipment: z.string().min(2),
+    brand: z.string().nullable().optional(),
+    model: z.string().nullable().optional(),
+    serialNumber: z.string().nullable().optional(),
+    description: z.string().min(10, "Por favor describa mejor la falla"),
+});
+
+// ─── ESQUEMAS DE CONFIGURACIÓN ─────────────────────────────
+export const settingsSchema = z.object({
+    publicUrl: z.string().url().default("http://localhost:3000"),
+    currency: z.enum(["USD", "PEN"]).default("USD"),
+    currencySymbol: z.string().default("$"),
 });

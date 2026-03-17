@@ -84,14 +84,14 @@ export default function EditInventoryItemPage({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="flex flex-col gap-2">
-                            <label htmlFor="code" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Código (SKU)</label>
+                            <label htmlFor="sku" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Código (SKU)</label>
                             <input
-                                id="code"
-                                name="code"
+                                id="sku"
+                                name="sku"
                                 type="text"
                                 required
                                 disabled={!canEdit}
-                                defaultValue={item.code}
+                                defaultValue={item.sku}
                                 placeholder="Ej. B0SCH-R123"
                                 className={`w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white ${!canEdit && "opacity-70 cursor-not-allowed"}`}
                             />
@@ -126,44 +126,44 @@ export default function EditInventoryItemPage({
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="flex flex-col gap-2">
-                            <label htmlFor="price" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Precio de Venta</label>
+                            <label htmlFor="unitPrice" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Precio de Venta</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">$</span>
                                 <input
-                                    id="price"
-                                    name="price"
+                                    id="unitPrice"
+                                    name="unitPrice"
                                     type="number"
                                     step="0.01"
                                     disabled={!canEdit}
                                     required
-                                    defaultValue={item.price}
+                                    defaultValue={Number(item.unitPrice)}
                                     placeholder="0.00"
                                     className={`w-full pl-8 pr-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white ${!canEdit && "opacity-70 cursor-not-allowed"}`}
                                 />
                             </div>
                         </div>
                         <div className="flex flex-col gap-2">
-                            <label htmlFor="stock" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Stock Actual</label>
+                            <label htmlFor="quantity" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Stock Actual</label>
                             <input
-                                id="stock"
-                                name="stock"
+                                id="quantity"
+                                name="quantity"
                                 type="number"
                                 disabled={!canEdit}
                                 required
-                                defaultValue={item.stock}
+                                defaultValue={item.quantity}
                                 min="0"
                                 className={`w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white ${!canEdit && "opacity-70 cursor-not-allowed"}`}
                             />
                         </div>
                         <div className="flex flex-col gap-2">
-                            <label htmlFor="minStock" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Stock Mínimo</label>
+                            <label htmlFor="minQuantity" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Stock Mínimo</label>
                             <input
-                                id="minStock"
-                                name="minStock"
+                                id="minQuantity"
+                                name="minQuantity"
                                 type="number"
                                 disabled={!canEdit}
                                 required
-                                defaultValue={item.minStock}
+                                defaultValue={item.minQuantity}
                                 min="0"
                                 className={`w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white ${!canEdit && "opacity-70 cursor-not-allowed"}`}
                             />

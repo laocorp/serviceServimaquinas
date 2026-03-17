@@ -10,7 +10,7 @@ export default async function OrdersPage() {
         orderBy: { createdAt: "desc" },
         include: {
             customer: {
-                select: { firstName: true, lastName: true, isVIP: true },
+                select: { name: true, isVIP: true },
             },
             technician: { select: { name: true } },
         },

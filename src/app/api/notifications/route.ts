@@ -15,7 +15,7 @@ export async function GET() {
         const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
         const recentOrders = await prisma.workOrder.findMany({
             where: { createdAt: { gte: since24h } },
-            include: { customer: { select: { firstName: true, lastName: true } } },
+            include: { customer: { select: { name: true } } },
             orderBy: { createdAt: "desc" },
             take: 5,
         });
@@ -26,24 +26,24 @@ export async function GET() {
             notifications.push({
                 id: `order-${order.id}`,
                 title: "Nueva orden registrada",
-                body: `${order.customer ? `${order.customer.firstName} ${order.customer.lastName}` : "Cliente"} — ${order.trackingCode}`,
+                body: `${order.customer ? order.customer.name : "Cliente"} — ${order.orderNumber}`,
                 time,
                 read: false,
                 type: "order",
             });
         }
 
-        // 2. Alertas de inventario (stock <= minStock) — comparación en JS
+        // 2. Alertas de inventario (quantity <= minQuantity) — comparación en JS
         const allInventory = await prisma.inventoryItem.findMany({
-            select: { id: true, name: true, stock: true, minStock: true },
+            select: { id: true, name: true, quantity: true, minQuantity: true },
         });
-        const lowStock = allInventory.filter(i => i.stock <= i.minStock);
+        const lowStock = allInventory.filter(i => i.quantity <= i.minQuantity);
 
         for (const item of lowStock.slice(0, 3)) {
             notifications.push({
                 id: `inv-${item.id}`,
                 title: "Stock bajo — Inventario",
-                body: `${item.name} tiene solo ${item.stock} unidades (mínimo ${item.minStock})`,
+                body: `${item.name} tiene solo ${item.quantity} unidades (mínimo ${item.minQuantity})`,
                 time: "Alerta activa",
                 read: false,
                 type: "inventory",

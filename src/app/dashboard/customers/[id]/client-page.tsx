@@ -77,40 +77,26 @@ export default function EditCustomerPage({
             <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm">
                 <form action={handleSubmit} className="flex flex-col gap-6">
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="flex flex-col gap-2">
-                            <label htmlFor="firstName" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Nombre *</label>
-                            <input
-                                id="firstName"
-                                name="firstName"
-                                type="text"
-                                required
-                                defaultValue={customer.firstName}
-                                className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
-                            />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                            <label htmlFor="lastName" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Apellido *</label>
-                            <input
-                                id="lastName"
-                                name="lastName"
-                                type="text"
-                                required
-                                defaultValue={customer.lastName}
-                                className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
-                            />
-                        </div>
+                    <div className="flex flex-col gap-2">
+                        <label htmlFor="name" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Nombre Completo *</label>
+                        <input
+                            id="name"
+                            name="name"
+                            type="text"
+                            required
+                            defaultValue={customer.name}
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
+                        />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="flex flex-col gap-2">
-                            <label htmlFor="email" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Correo Electrónico</label>
+                            <label htmlFor="dni" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">DNI / RUC</label>
                             <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                defaultValue={customer.email || ""}
-                                placeholder="cliente@correo.com"
+                                id="dni"
+                                name="dni"
+                                type="text"
+                                defaultValue={customer.dni || ""}
                                 className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
                             />
                         </div>
@@ -124,6 +110,29 @@ export default function EditCustomerPage({
                                 className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
                             />
                         </div>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <label htmlFor="email" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Correo Electrónico</label>
+                        <input
+                            id="email"
+                            name="email"
+                            type="email"
+                            defaultValue={customer.email || ""}
+                            placeholder="cliente@correo.com"
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                        <label htmlFor="address" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Dirección</label>
+                        <input
+                            id="address"
+                            name="address"
+                            type="text"
+                            defaultValue={customer.address || ""}
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
+                        />
                     </div>
 
                     {/* KPI Mini-Dashboard for existing customer */}
@@ -147,18 +156,6 @@ export default function EditCustomerPage({
                                 Cliente VIP (Marca Exclusiva)
                             </label>
                         </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                        <label htmlFor="notes" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Notas de Agente CRM</label>
-                        <textarea
-                            id="notes"
-                            name="notes"
-                            rows={4}
-                            defaultValue={customer.notes || ""}
-                            placeholder="Preferencias, historial de equipos, direcciones..."
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white resize-none"
-                        />
                     </div>
 
                     <div className="pt-4 flex items-center justify-end gap-4 border-t border-zinc-100 dark:border-zinc-800/50 mt-4">

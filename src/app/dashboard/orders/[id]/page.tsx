@@ -16,7 +16,7 @@ export default async function OrderDetailPage(props: { params: Promise<{ id: str
             technician: { select: { id: true, name: true } },
             items: {
                 include: {
-                    inventoryItem: { select: { name: true, code: true } }
+                    inventoryItem: { select: { name: true, sku: true } }
                 }
             },
             report: {
@@ -30,7 +30,7 @@ export default async function OrderDetailPage(props: { params: Promise<{ id: str
     if (!order) notFound();
 
     const inventoryItems = await prisma.inventoryItem.findMany({
-        select: { id: true, name: true, stock: true, price: true },
+        select: { id: true, name: true, quantity: true, unitPrice: true },
         orderBy: { name: 'asc' }
     });
 

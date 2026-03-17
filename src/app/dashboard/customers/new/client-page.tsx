@@ -42,38 +42,30 @@ export default function NewCustomerClient() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="flex flex-col gap-2">
-                            <label htmlFor="firstName" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Nombre *</label>
+                            <label htmlFor="name" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Nombre Completo / Razón Social *</label>
                             <input
-                                id="firstName"
-                                name="firstName"
+                                id="name"
+                                name="name"
                                 type="text"
                                 required
+                                placeholder="Ej. Juan Pérez o Servimaquinas S.A."
                                 className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
                             />
                         </div>
                         <div className="flex flex-col gap-2">
-                            <label htmlFor="lastName" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Apellido *</label>
+                            <label htmlFor="dni" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">DNI / RUC *</label>
                             <input
-                                id="lastName"
-                                name="lastName"
+                                id="dni"
+                                name="dni"
                                 type="text"
                                 required
+                                placeholder="Ej. 123456789-0"
                                 className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
                             />
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div className="flex flex-col gap-2">
-                            <label htmlFor="documentId" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">RUC / CI</label>
-                            <input
-                                id="documentId"
-                                name="documentId"
-                                type="text"
-                                placeholder="Ej. 123456789-0"
-                                className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
-                            />
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="flex flex-col gap-2">
                             <label htmlFor="email" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Correo Electrónico</label>
                             <input
@@ -95,27 +87,14 @@ export default function NewCustomerClient() {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3 p-4 bg-amber-50/50 dark:bg-amber-900/10 border border-amber-200/50 dark:border-amber-800/30 rounded-xl mt-2">
+                    <div className="flex flex-col gap-2mt-2">
+                        <label htmlFor="address" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Dirección de Domicilio</label>
                         <input
-                            id="isVIP"
-                            name="isVIP"
-                            type="checkbox"
-                            className="w-5 h-5 text-amber-500 rounded border-gray-300 focus:ring-amber-500"
-                        />
-                        <div>
-                            <label htmlFor="isVIP" className="text-sm font-bold text-amber-800 dark:text-amber-400 cursor-pointer">Cliente VIP (Marca Exclusiva)</label>
-                            <p className="text-xs text-amber-700/70 dark:text-amber-500/70 mt-0.5">Asigna 100 puntos de lealtad automáticos y privilegios en órdenes.</p>
-                        </div>
-                    </div>
-
-                    <div className="flex flex-col gap-2 mt-2">
-                        <label htmlFor="notes" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Notas de Agente CRM</label>
-                        <textarea
-                            id="notes"
-                            name="notes"
-                            rows={3}
-                            placeholder="Preferencias, historial de equipos, direcciones..."
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white resize-none"
+                            id="address"
+                            name="address"
+                            type="text"
+                            placeholder="Calle, Ciudad, Referencia..."
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
                         />
                     </div>
 

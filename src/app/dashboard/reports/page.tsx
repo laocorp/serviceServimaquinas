@@ -11,7 +11,7 @@ export default async function ReportsPage() {
             workOrder: {
                 include: {
                     customer: {
-                        select: { firstName: true, lastName: true }
+                        select: { name: true }
                     }
                 }
             }
@@ -54,7 +54,7 @@ export default async function ReportsPage() {
                                     <tr key={report.id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30 transition-colors">
                                         <td className="px-6 py-4">
                                             <span className="font-mono font-medium text-slate-900 dark:text-zinc-200 bg-slate-100 dark:bg-zinc-800 px-2.5 py-1 rounded text-xs">
-                                                {report.workOrder.trackingCode}
+                                                {report.workOrder.orderNumber}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-zinc-600 dark:text-zinc-400 whitespace-nowrap">
@@ -62,10 +62,10 @@ export default async function ReportsPage() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="font-medium text-slate-900 dark:text-zinc-200">
-                                                {report.workOrder.customer.firstName} {report.workOrder.customer.lastName}
+                                                {report.workOrder.customer.name}
                                             </div>
                                             <div className="text-xs text-zinc-500">
-                                                {report.workOrder.deviceBrand} {report.workOrder.deviceModel}
+                                                {report.workOrder.brand} {report.workOrder.model}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 font-medium text-blue-600 dark:text-blue-400">
@@ -77,7 +77,7 @@ export default async function ReportsPage() {
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            <Link href={`/dashboard/orders/${report.workOrderId}`} className="text-sm font-medium text-blue-500 hover:text-blue-700 transition-colors">
+                                            <Link href={`/dashboard/orders/${report.orderId}`} className="text-sm font-medium text-blue-500 hover:text-blue-700 transition-colors">
                                                 Ver Detalle →
                                             </Link>
                                         </td>

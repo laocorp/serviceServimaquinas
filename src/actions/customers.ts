@@ -11,13 +11,12 @@ export async function createCustomer(formData: FormData) {
         await ensureStaff();
 
         const rawData = {
-            firstName: formData.get("firstName") as string,
-            lastName: formData.get("lastName") as string,
+            name: formData.get("name") as string,
             email: formData.get("email") as string,
             phone: formData.get("phone") as string,
-            documentId: formData.get("documentId") as string,
+            dni: formData.get("dni") as string,
+            address: formData.get("address") as string,
             isVIP: formData.get("isVIP") === "on",
-            notes: formData.get("notes") as string,
         };
 
         const validated = customerSchema.parse(rawData);
@@ -27,11 +26,13 @@ export async function createCustomer(formData: FormData) {
             if (existingEmail) return { error: "Ya existe un cliente con este correo." };
         }
 
+        if (validated.dni) {
+            const existingDni = await prisma.customer.findUnique({ where: { dni: validated.dni } });
+            if (existingDni) return { error: "Ya existe un cliente con este DNI/Documento." };
+        }
+
         await prisma.customer.create({
-            data: {
-                ...validated,
-                loyaltyPoints: validated.isVIP ? 100 : 0
-            }
+            data: { ...validated }
         });
 
         revalidatePath("/dashboard/customers");
@@ -47,8 +48,7 @@ export async function createCustomerInline(formData: FormData) {
         await ensureStaff();
 
         const rawData = {
-            firstName: formData.get("firstName") as string,
-            lastName: formData.get("lastName") as string,
+            name: formData.get("name") as string,
             email: formData.get("email") as string,
             phone: formData.get("phone") as string,
         };
@@ -62,14 +62,12 @@ export async function createCustomerInline(formData: FormData) {
 
         const customer = await prisma.customer.create({
             data: {
-                firstName: validated.firstName || "S/N",
-                lastName: validated.lastName || "S/N",
+                name: validated.name || "S/N",
                 email: validated.email || null,
                 phone: validated.phone || null,
                 isVIP: false,
-                loyaltyPoints: 0,
             },
-            select: { id: true, firstName: true, lastName: true, isVIP: true, phone: true, email: true },
+            select: { id: true, name: true, isVIP: true, phone: true, email: true },
         });
 
         revalidatePath("/dashboard/customers");
@@ -86,13 +84,12 @@ export async function updateCustomer(id: string, formData: FormData) {
         await ensureStaff();
 
         const rawData = {
-            firstName: formData.get("firstName") as string,
-            lastName: formData.get("lastName") as string,
+            name: formData.get("name") as string,
             email: formData.get("email") as string,
             phone: formData.get("phone") as string,
-            documentId: formData.get("documentId") as string,
+            dni: formData.get("dni") as string,
+            address: formData.get("address") as string,
             isVIP: formData.get("isVIP") === "on",
-            notes: formData.get("notes") as string,
         };
 
         const validated = customerSchema.parse(rawData);

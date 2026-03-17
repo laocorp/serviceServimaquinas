@@ -43,10 +43,10 @@ export default function NewInventoryItemPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="flex flex-col gap-2">
-                            <label htmlFor="code" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Código (SKU)</label>
+                            <label htmlFor="sku" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Código (SKU)</label>
                             <input
-                                id="code"
-                                name="code"
+                                id="sku"
+                                name="sku"
                                 type="text"
                                 required
                                 placeholder="Ej. B0SCH-R123"
@@ -79,12 +79,12 @@ export default function NewInventoryItemPage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="flex flex-col gap-2">
-                            <label htmlFor="price" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Precio de Venta</label>
+                            <label htmlFor="unitPrice" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Precio de Venta</label>
                             <div className="relative">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 font-medium">$</span>
                                 <input
-                                    id="price"
-                                    name="price"
+                                    id="unitPrice"
+                                    name="unitPrice"
                                     type="number"
                                     step="0.01"
                                     required
@@ -94,10 +94,10 @@ export default function NewInventoryItemPage() {
                             </div>
                         </div>
                         <div className="flex flex-col gap-2">
-                            <label htmlFor="stock" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Stock Inicial</label>
+                            <label htmlFor="quantity" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Stock Inicial</label>
                             <input
-                                id="stock"
-                                name="stock"
+                                id="quantity"
+                                name="quantity"
                                 type="number"
                                 required
                                 defaultValue="0"
@@ -106,10 +106,10 @@ export default function NewInventoryItemPage() {
                             />
                         </div>
                         <div className="flex flex-col gap-2">
-                            <label htmlFor="minStock" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Stock Mínimo (Alerta)</label>
+                            <label htmlFor="minQuantity" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Stock Mínimo (Alerta)</label>
                             <input
-                                id="minStock"
-                                name="minStock"
+                                id="minQuantity"
+                                name="minQuantity"
                                 type="number"
                                 required
                                 defaultValue="5"

@@ -60,7 +60,7 @@ export default function OrderDetailClient({
         if (!phone) return "#";
         // Usa la URL configurada globalmente
         const publicUrl = settings?.publicUrl || "https://servimaquinas.com";
-        const message = `Hola ${order.customer.firstName}, te contactamos de ${settings?.companyName || "Servimaquinas"}.\nEste es el estado de tu equipo ${order.deviceBrand} ${order.deviceModel}.\n\nEstado actual: *${order.status}*.\n\nPuedes rastrear tu orden ingresando el código *${order.trackingCode}* en nuestro portal web: ${publicUrl}/rastreo`;
+        const message = `Hola ${order.customer.name}, te contactamos de ${settings?.companyName || "Servimaquinas"}.\nEste es el estado de tu equipo ${order.brand} ${order.model}.\n\nEstado actual: *${order.status}*.\n\nPuedes rastrear tu orden ingresando el código *${order.orderNumber}* en nuestro portal web: ${publicUrl}/rastreo`;
         return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     };
 
@@ -110,8 +110,8 @@ export default function OrderDetailClient({
         });
     };
 
-    const totalPartsCost = order.items.reduce((acc: number, item: any) => acc + (item.quantity * item.priceAtTime), 0);
-    const totalOrderValue = totalPartsCost + (order.laborCost || 0);
+    const totalPartsCost = order.items.reduce((acc: number, item: any) => acc + Number(item.totalPrice), 0);
+    const totalOrderValue = totalPartsCost + Number(order.laborCost || 0);
 
     return (
         <div className="max-w-5xl mx-auto flex flex-col gap-8">
@@ -126,7 +126,7 @@ export default function OrderDetailClient({
                     </Link>
                     <div>
                         <div className="flex flex-wrap items-center gap-3">
-                            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight">Orden {order.trackingCode}</h1>
+                            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight">Orden {order.orderNumber}</h1>
                             <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${STATUS_COLORS[order.status]}`}>
                                 {order.status}
                             </span>
@@ -177,19 +177,19 @@ export default function OrderDetailClient({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">Cliente</p>
-                                <p className="font-bold text-slate-900 dark:text-zinc-200">{order.customer.firstName} {order.customer.lastName}</p>
+                                <p className="font-bold text-slate-900 dark:text-zinc-200">{order.customer.name}</p>
                                 <p className="text-sm text-zinc-500">{order.customer.phone || order.customer.email}</p>
                             </div>
                             <div>
                                 <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-1">Equipo</p>
-                                <p className="font-bold text-slate-900 dark:text-zinc-200">{order.deviceBrand} {order.deviceModel}</p>
-                                <p className="text-xs font-mono text-zinc-400 uppercase tracking-tighter">S/N: {order.deviceSerial || "No registrado"}</p>
+                                <p className="font-bold text-slate-900 dark:text-zinc-200">{order.brand} {order.model}</p>
+                                <p className="text-xs font-mono text-zinc-400 uppercase tracking-tighter">S/N: {order.serialNumber || "No registrado"}</p>
                             </div>
                         </div>
 
                         <div className="mt-6 p-4 bg-slate-50 dark:bg-zinc-950 rounded-xl border border-zinc-100 dark:border-zinc-800">
                             <p className="text-xs font-bold text-slate-700 dark:text-zinc-400 mb-2">Falla Reportada Inicialmente:</p>
-                            <p className="text-sm text-slate-900 dark:text-zinc-300 italic">"{order.reportedIssue}"</p>
+                            <p className="text-sm text-slate-900 dark:text-zinc-300 italic">"{order.description}"</p>
                         </div>
                     </div>
 
@@ -362,9 +362,9 @@ export default function OrderDetailClient({
                                     <div key={i.id} className="flex justify-between items-center text-sm p-3 bg-slate-50 dark:bg-zinc-950 rounded-xl border border-zinc-100 dark:border-zinc-800">
                                         <div>
                                             <p className="font-semibold text-slate-900 dark:text-zinc-200">{i.inventoryItem.name}</p>
-                                            <p className="text-xs text-zinc-500">{i.quantity} uds x ${i.priceAtTime.toLocaleString('es-CO')}</p>
+                                            <p className="text-xs text-zinc-500">{i.quantity} uds x ${Number(i.unitPrice).toLocaleString('es-CO')}</p>
                                         </div>
-                                        <p className="font-bold text-slate-900 dark:text-zinc-300">${(i.quantity * i.priceAtTime).toLocaleString('es-CO')}</p>
+                                        <p className="font-bold text-slate-900 dark:text-zinc-300">${Number(i.totalPrice).toLocaleString('es-CO')}</p>
                                     </div>
                                 ))
                             )}
@@ -382,8 +382,8 @@ export default function OrderDetailClient({
                                 >
                                     <option value="" disabled>Seleccionar pieza (Stock)...</option>
                                     {inventoryItems.map(item => (
-                                        <option key={item.id} value={item.id} disabled={item.stock === 0}>
-                                            {item.name} (Quedan: {item.stock}) - ${item.price}
+                                        <option key={item.id} value={item.id} disabled={item.quantity === 0}>
+                                            {item.name} (Quedan: {item.quantity}) - ${item.unitPrice}
                                         </option>
                                     ))}
                                 </select>
@@ -415,7 +415,7 @@ export default function OrderDetailClient({
                             <p className="text-sm text-gray-500 mt-1">Orden de Trabajo (Ingreso)</p>
                         </div>
                         <div className="text-right">
-                            <p className="text-xl font-bold bg-slate-100 px-3 py-1 rounded-lg">#{order.trackingCode}</p>
+                            <p className="text-xl font-bold bg-slate-100 px-3 py-1 rounded-lg">#{order.orderNumber}</p>
                             <p className="text-xs text-gray-500 mt-2">Fecha: {new Date(order.createdAt).toLocaleDateString('es-CO')}</p>
                         </div>
                     </div>
@@ -423,22 +423,22 @@ export default function OrderDetailClient({
                     <div className="grid grid-cols-2 gap-8 mb-8">
                         <div>
                             <h3 className="text-sm uppercase font-bold text-gray-400 mb-2">Datos del Cliente</h3>
-                            <p className="font-bold text-lg">{order.customer.firstName} {order.customer.lastName}</p>
-                            {order.customer.documentId && <p className="text-sm">Doc: {order.customer.documentId}</p>}
+                            <p className="font-bold text-lg">{order.customer.name}</p>
+                            {order.customer.dni && <p className="text-sm">Doc: {order.customer.dni}</p>}
                             <p className="text-sm text-gray-600">{order.customer.phone || 'Sin teléfono'}</p>
                             <p className="text-sm text-gray-600">{order.customer.email || 'Sin email'}</p>
                         </div>
                         <div>
                             <h3 className="text-sm uppercase font-bold text-gray-400 mb-2">Información del Equipo</h3>
-                            <p className="font-bold text-lg">{order.deviceBrand} {order.deviceModel}</p>
-                            <p className="text-sm text-gray-600">S/N: {order.deviceSerial || 'No especificado'}</p>
+                            <p className="font-bold text-lg">{order.brand} {order.model}</p>
+                            <p className="text-sm text-gray-600">S/N: {order.serialNumber || 'No especificado'}</p>
                         </div>
                     </div>
 
                     <div className="mb-10">
                         <h3 className="text-sm uppercase font-bold text-gray-400 mb-2">Motivo de Ingreso / Falla Reportada</h3>
                         <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl min-h-[100px]">
-                            <p className="text-black italic">"{order.reportedIssue}"</p>
+                            <p className="text-black italic">"{order.description}"</p>
                         </div>
                     </div>
 
@@ -449,8 +449,8 @@ export default function OrderDetailClient({
                         </div>
                         <div className="flex flex-col items-center gap-2">
                             <p className="text-xs font-bold text-gray-500">Escanea para rastrear tu orden:</p>
-                            <QRCode value={`${settings?.publicUrl || "https://servimaquinas.com"}/track/${order.trackingCode}`} size={120} />
-                            <p className="text-xs font-bold">{order.trackingCode}</p>
+                            <QRCode value={`${settings?.publicUrl || "https://servimaquinas.com"}/track/${order.orderNumber}`} size={120} />
+                            <p className="text-xs font-bold">{order.orderNumber}</p>
                         </div>
                     </div>
                 </div>
@@ -464,7 +464,7 @@ export default function OrderDetailClient({
                                 <p className="text-sm text-gray-500 mt-1">Informe Técnico de Mantenimiento</p>
                             </div>
                             <div className="text-right">
-                                <p className="text-xl font-bold bg-slate-100 px-3 py-1 rounded-lg">#{order.trackingCode}</p>
+                                <p className="text-xl font-bold bg-slate-100 px-3 py-1 rounded-lg">#{order.orderNumber}</p>
                                 <p className="text-xs text-gray-500 mt-2">Fecha Entrega: {new Date(order.report.createdAt).toLocaleDateString('es-CO')}</p>
                             </div>
                         </div>
@@ -472,8 +472,8 @@ export default function OrderDetailClient({
                         <div className="grid grid-cols-2 gap-8 mb-8">
                             <div>
                                 <h3 className="text-sm uppercase font-bold text-gray-400 mb-2">Cliente</h3>
-                                <p className="font-bold text-lg">{order.customer.firstName} {order.customer.lastName}</p>
-                                <p className="text-sm text-gray-600">{order.deviceBrand} {order.deviceModel}</p>
+                                <p className="font-bold text-lg">{order.customer.name}</p>
+                                <p className="text-sm text-gray-600">{order.brand} {order.model}</p>
                             </div>
                             <div>
                                 <h3 className="text-sm uppercase font-bold text-gray-400 mb-2">Técnico Responsable</h3>
@@ -521,8 +521,8 @@ export default function OrderDetailClient({
                                             <tr key={i.id} className="border-b border-gray-100">
                                                 <td className="py-2 text-sm">{i.inventoryItem.name}</td>
                                                 <td className="py-2 text-sm text-center">{i.quantity}</td>
-                                                <td className="py-2 text-sm text-right">${i.priceAtTime.toLocaleString('es-CO')}</td>
-                                                <td className="py-2 text-sm text-right font-bold">${(i.quantity * i.priceAtTime).toLocaleString('es-CO')}</td>
+                                                <td className="py-2 text-sm text-right">${Number(i.unitPrice).toLocaleString('es-CO')}</td>
+                                                <td className="py-2 text-sm text-right font-bold">${Number(i.totalPrice).toLocaleString('es-CO')}</td>
                                             </tr>
                                         ))}
                                     </tbody>

@@ -10,13 +10,14 @@ type OrderStatus = "PENDIENTE" | "EN_REVISION" | "EN_REPARACION" | "REPARADO" | 
 
 type Order = {
     id: string;
-    trackingCode: string;
-    deviceBrand: string;
-    deviceModel: string;
-    reportedIssue: string;
+    orderNumber: string;
+    equipment: string;
+    brand: string | null;
+    model: string | null;
+    description: string;
     status: OrderStatus;
     createdAt: Date;
-    customer: { firstName: string; lastName: string; isVIP: boolean };
+    customer: { name: string; isVIP: boolean };
     technician: { name: string } | null;
 };
 
@@ -43,7 +44,7 @@ function OrderCard({ order, onDragStart }: { order: Order; onDragStart: (id: str
             {/* Código + VIP */}
             <div className="flex items-start justify-between gap-2 mb-2.5">
                 <span className="font-mono text-[11px] font-bold text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 rounded">
-                    {order.trackingCode}
+                    {order.orderNumber}
                 </span>
                 {order.customer.isVIP && (
                     <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded">🌟 VIP</span>
@@ -52,23 +53,23 @@ function OrderCard({ order, onDragStart }: { order: Order; onDragStart: (id: str
 
             {/* Equipo */}
             <p className="text-sm font-semibold text-slate-900 dark:text-white leading-snug">
-                {order.deviceBrand} {order.deviceModel}
+                {order.equipment} {order.brand} {order.model}
             </p>
             <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 line-clamp-2">
-                {order.reportedIssue}
+                {order.description}
             </p>
 
             {/* Footer: cliente + tiempo */}
             <div className="flex items-center justify-between mt-3 pt-3 border-t border-zinc-100 dark:border-zinc-800">
                 <div className="flex items-center gap-1.5">
                     <div className="w-5 h-5 rounded-full bg-slate-200 dark:bg-zinc-700 flex items-center justify-center text-[9px] font-bold text-slate-600 dark:text-zinc-300">
-                        {order.customer.firstName[0]}{order.customer.lastName[0]}
+                        {(order.customer.name || "S")[0]}
                     </div>
-                    <span className="text-xs text-zinc-600 dark:text-zinc-400">
-                        {order.customer.firstName} {order.customer.lastName}
+                    <span className="text-xs text-zinc-600 dark:text-zinc-400 truncate max-w-[80px]">
+                        {order.customer.name}
                     </span>
                 </div>
-                <span className={`text-[10px] font-semibold ${dayAge > 7 ? "text-red-500" : dayAge > 3 ? "text-amber-500" : "text-zinc-400"}`}>
+                <span className={`text-[10px] font-semibold flex-shrink-0 ${dayAge > 7 ? "text-red-500" : dayAge > 3 ? "text-amber-500" : "text-zinc-400"}`}>
                     {dayAge === 0 ? "Hoy" : `${dayAge}d`}
                 </span>
             </div>
@@ -184,18 +185,18 @@ function TableView({ orders }: { orders: Order[] }) {
                             <tr key={order.id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30 transition-colors">
                                 <td className="px-6 py-4">
                                     <span className="font-mono font-medium text-slate-900 dark:text-zinc-200 bg-slate-100 dark:bg-zinc-800 px-2.5 py-1 rounded text-xs">
-                                        {order.trackingCode}
+                                        {order.orderNumber}
                                     </span>
                                 </td>
                                 <td className="px-6 py-4">
                                     <div className="font-medium text-slate-900 dark:text-zinc-200">
-                                        {order.customer.firstName} {order.customer.lastName}
+                                        {order.customer.name}
                                     </div>
                                     {order.customer.isVIP && <div className="text-[10px] font-bold text-amber-600 mt-0.5">🌟 VIP</div>}
                                 </td>
                                 <td className="px-6 py-4 text-zinc-600 dark:text-zinc-400">
-                                    <div className="font-medium text-slate-700 dark:text-zinc-300">{order.deviceBrand} {order.deviceModel}</div>
-                                    <div className="text-xs truncate max-w-[160px]">{order.reportedIssue}</div>
+                                    <div className="font-medium text-slate-700 dark:text-zinc-300">{order.equipment} {order.brand} {order.model}</div>
+                                    <div className="text-xs truncate max-w-[160px]">{order.description}</div>
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ${STATUS_BADGE[order.status]}`}>

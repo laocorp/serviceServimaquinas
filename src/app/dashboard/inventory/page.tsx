@@ -55,15 +55,15 @@ export default async function InventoryPage() {
                                 </tr>
                             ) : (
                                 items.map((item: any) => {
-                                    const isLowStock = item.stock <= item.minStock;
-                                    const isOutOfStock = item.stock === 0;
+                                    const isLowStock = item.quantity <= item.minQuantity;
+                                    const isOutOfStock = item.quantity === 0;
 
                                     return (
                                         <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30 transition-colors">
-                                            <td className="px-6 py-4 font-mono text-[11px] font-bold text-zinc-400 uppercase tracking-tighter">{item.code}</td>
+                                            <td className="px-6 py-4 font-mono text-[11px] font-bold text-zinc-400 uppercase tracking-tighter">{item.sku}</td>
                                             <td className="px-6 py-4 font-bold text-slate-900 dark:text-zinc-200">{item.name}</td>
-                                            <td className="px-6 py-4 font-medium text-slate-600 dark:text-zinc-400">${item.price.toLocaleString('es-CO')}</td>
-                                            <td className="px-6 py-4 font-black text-slate-950 dark:text-white text-center">{item.stock}</td>
+                                            <td className="px-6 py-4 font-medium text-slate-600 dark:text-zinc-400">${Number(item.unitPrice).toLocaleString('es-CO')}</td>
+                                            <td className="px-6 py-4 font-black text-slate-950 dark:text-white text-center">{item.quantity}</td>
                                             <td className="px-6 py-4">
                                                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest
                                                     ${isOutOfStock

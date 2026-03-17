@@ -17,9 +17,9 @@ export default async function PublicTrackingPage(props: { params: Promise<{ code
     const trackingCode = params.code;
 
     const order = await prisma.workOrder.findUnique({
-        where: { trackingCode },
+        where: { orderNumber: trackingCode },
         include: {
-            customer: { select: { firstName: true, lastName: true, isVIP: true } },
+            customer: { select: { name: true, isVIP: true } },
             report: true
         }
     });
@@ -55,7 +55,7 @@ export default async function PublicTrackingPage(props: { params: Promise<{ code
                         <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Rastreo de Reparación</h1>
                         {order && (
                             <p className="text-zinc-500 mt-2 font-medium">
-                                Para: {order.customer.firstName} {order.customer.lastName}
+                                Para: {order.customer.name}
                             </p>
                         )}
                     </div>
@@ -89,7 +89,7 @@ export default async function PublicTrackingPage(props: { params: Promise<{ code
                         <div className="grid grid-cols-2 gap-6 bg-slate-50 p-6 rounded-2xl border border-slate-100">
                             <div>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Equipo</p>
-                                <p className="font-bold text-slate-900 text-lg">{order.deviceBrand} {order.deviceModel}</p>
+                                <p className="font-bold text-slate-900 text-lg">{order.brand} {order.model}</p>
                             </div>
                             <div>
                                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Estado</p>

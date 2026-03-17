@@ -9,7 +9,7 @@ import { productSchema, categorySchema } from "@/lib/validations";
 
 export async function getStoreCategories() {
     try {
-        return await (prisma as any).storeCategory.findMany({
+        return await prisma.storeCategory.findMany({
             orderBy: { name: "asc" }
         });
     } catch (error) {
@@ -22,7 +22,7 @@ export async function createStoreCategory(name: string) {
         await ensureAdmin();
         const validated = categorySchema.parse({ name });
 
-        const cat = await (prisma as any).storeCategory.create({
+        const cat = await prisma.storeCategory.create({
             data: { name: validated.name.trim() }
         });
 
@@ -37,14 +37,14 @@ export async function createStoreCategory(name: string) {
 
 export async function getStoreProducts(query?: string) {
     try {
-        return await (prisma as any).product.findMany({
+        return await prisma.product.findMany({
             where: query ? {
                 OR: [
                     { name: { contains: query, mode: 'insensitive' } },
                     { description: { contains: query, mode: 'insensitive' } }
                 ]
             } : {},
-            include: { storeCategory: true },
+            include: { category: true },
             orderBy: { createdAt: "desc" }
         });
     } catch (error) {
@@ -54,9 +54,9 @@ export async function getStoreProducts(query?: string) {
 
 export async function getPromotionProducts() {
     try {
-        return await (prisma as any).product.findMany({
+        return await prisma.product.findMany({
             where: { isPromotion: true },
-            include: { storeCategory: true },
+            include: { category: true },
             take: 20
         });
     } catch (error) {
@@ -81,10 +81,10 @@ export async function createProduct(formData: FormData) {
 
         const validated = productSchema.parse(rawData);
 
-        const product = await (prisma as any).product.create({
+        const product = await prisma.product.create({
             data: {
                 ...validated,
-                categoryId: validated.categoryId || null
+                categoryId: validated.categoryId
             }
         });
 
@@ -113,11 +113,11 @@ export async function updateProduct(id: string, formData: FormData) {
 
         const validated = productSchema.parse(rawData);
 
-        await (prisma as any).product.update({
+        await prisma.product.update({
             where: { id },
             data: {
                 ...validated,
-                categoryId: validated.categoryId || null
+                categoryId: validated.categoryId
             }
         });
 
@@ -132,7 +132,7 @@ export async function updateProduct(id: string, formData: FormData) {
 export async function deleteProduct(id: string) {
     try {
         await ensureAdmin();
-        await (prisma as any).product.delete({ where: { id } });
+        await prisma.product.delete({ where: { id } });
         revalidatePath("/dashboard/store");
         revalidatePath("/");
         return { success: "Producto eliminado" };

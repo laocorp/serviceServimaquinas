@@ -7,15 +7,7 @@ import { OrderStatus } from "@prisma/client";
 import { ensureStaff, handleServerError } from "@/lib/security";
 import { orderSchema } from "@/lib/validations";
 
-// Generador de Código de Rastreo Aleatorio
-function generateTrackingCode() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = 'SRV-';
-    for (let i = 0; i < 6; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-}
+
 
 export async function createOrder(formData: FormData) {
     try {
@@ -23,34 +15,24 @@ export async function createOrder(formData: FormData) {
 
         const rawData = {
             customerId: formData.get("customerId") as string,
-            createdById: formData.get("createdById") as string,
-            deviceBrand: formData.get("deviceBrand") as string,
-            deviceModel: formData.get("deviceModel") as string,
-            deviceSerial: formData.get("deviceSerial") as string,
-            reportedIssue: formData.get("reportedIssue") as string,
+            creatorId: formData.get("creatorId") as string,
+            equipment: formData.get("equipment") as string,
+            brand: formData.get("brand") as string,
+            model: formData.get("model") as string,
+            serialNumber: formData.get("serialNumber") as string,
+            description: formData.get("description") as string,
         };
 
         const validated = orderSchema.parse(rawData);
 
-        // Generar código único de rastreo
-        let trackingCode = generateTrackingCode();
-        let isUnique = false;
-        let attempts = 0;
-
-        while (!isUnique && attempts < 10) {
-            const existing = await prisma.workOrder.findUnique({ where: { trackingCode } });
-            if (!existing) {
-                isUnique = true;
-            } else {
-                trackingCode = generateTrackingCode();
-                attempts++;
-            }
-        }
+        // Generar número de orden único (formato SM-XXXX)
+        const count = await prisma.workOrder.count();
+        const orderNumber = `SM-${(count + 1).toString().padStart(4, "0")}`;
 
         await prisma.workOrder.create({
             data: {
                 ...validated,
-                trackingCode,
+                orderNumber,
                 status: "PENDIENTE"
             }
         });
@@ -100,19 +82,24 @@ export async function addInventoryItemToOrder(orderId: string, inventoryItemId: 
         await prisma.$transaction(async (tx: any) => {
             const item = await tx.inventoryItem.findUnique({ where: { id: inventoryItemId } });
             if (!item) throw new Error("Repuesto no encontrado en almacén.");
-            if (item.stock < quantity) throw new Error(`Stock insuficiente para ${item.name}.`);
+            if (item.quantity < quantity) throw new Error(`Stock insuficiente para ${item.name}.`);
 
             await tx.inventoryItem.update({
                 where: { id: inventoryItemId },
-                data: { stock: item.stock - quantity }
+                data: { quantity: item.quantity - quantity }
             });
+
+            const unitPrice = Number(item.unitPrice);
+            const totalPrice = unitPrice * quantity;
 
             await tx.workOrderItem.create({
                 data: {
-                    workOrderId: orderId,
-                    inventoryItemId,
+                    orderId: orderId,
+                    itemId: inventoryItemId,
+                    description: item.name,
                     quantity,
-                    priceAtTime: item.price
+                    unitPrice,
+                    totalPrice
                 }
             });
         });
@@ -147,7 +134,7 @@ export async function createWorkReport(orderId: string, technicianId: string, fo
         await prisma.$transaction(async (tx: any) => {
             await tx.workReport.create({
                 data: {
-                    workOrderId: orderId,
+                    orderId,
                     technicianId,
                     diagnosis,
                     actionsTaken,

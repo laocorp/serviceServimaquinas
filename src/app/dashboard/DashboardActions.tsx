@@ -3,13 +3,13 @@
 import Link from "next/link";
 
 interface OrderExport {
-    trackingCode: string;
-    reportedIssue: string;
-    deviceBrand: string;
-    deviceModel: string;
+    orderNumber: string;
+    description: string;
+    brand: string | null;
+    model: string | null;
     status: string;
     createdAt: Date;
-    customer: { firstName: string; lastName: string } | null;
+    customer: { name: string } | null;
 }
 
 export default function DashboardActions({ orders }: { orders: OrderExport[] }) {
@@ -18,11 +18,11 @@ export default function DashboardActions({ orders }: { orders: OrderExport[] }) 
         // Construir CSV
         const headers = ["Código", "Cliente", "Marca", "Modelo", "Problema", "Estado", "Fecha"];
         const rows = orders.map(o => [
-            o.trackingCode,
-            o.customer ? `${o.customer.firstName} ${o.customer.lastName}` : "Sin cliente",
-            o.deviceBrand,
-            o.deviceModel,
-            (o.reportedIssue ?? "").replace(/,/g, ";"),
+            o.orderNumber,
+            o.customer ? o.customer.name : "Sin cliente",
+            o.brand || "---",
+            o.model || "---",
+            (o.description ?? "").replace(/,/g, ";"),
             o.status,
             new Date(o.createdAt).toLocaleDateString("es-CO"),
         ]);

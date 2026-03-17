@@ -58,11 +58,11 @@ export default async function CustomersPage() {
                                     <tr key={customer.id} className="hover:bg-slate-50/50 dark:hover:bg-zinc-800/30 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="font-bold text-slate-900 dark:text-zinc-200">
-                                                {customer.firstName} {customer.lastName}
+                                                {customer.name}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 font-mono text-xs text-zinc-500">
-                                            {customer.documentId || "---"}
+                                            {customer.dni || "---"}
                                         </td>
                                         <td className="px-6 py-4 text-zinc-600 dark:text-zinc-400">
                                             <div className="font-medium">{customer.email || "Sin email"}</div>

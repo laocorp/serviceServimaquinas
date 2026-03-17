@@ -27,19 +27,19 @@ export default async function DashboardPage() {
         where: { isVIP: true },
     });
 
-    // 3. Valor en repuestos consumidos
+    // 3. Valor en repuestos consumidos (usando totalPrice ya calculado en DB)
     const usedItems = await prisma.workOrderItem.findMany({
-        select: { quantity: true, priceAtTime: true },
+        select: { totalPrice: true },
     });
     const totalInventoryValue = usedItems.reduce(
-        (total, item) => total + (item.quantity * item.priceAtTime),
+        (total, item) => total + Number(item.totalPrice),
         0
     );
 
     // 4. Alertas de Inventario
     const inventoryAlertsCount = await prisma.inventoryItem.count({
         where: {
-            stock: { lte: prisma.inventoryItem.fields.minStock }
+            quantity: { lte: 5 } // O usar un valor dinámico si se prefiere
         }
     });
 
@@ -60,15 +60,15 @@ export default async function DashboardPage() {
         ...recentOrders.map(o => ({
             id: o.id,
             type: 'ORDER_CREATED' as const,
-            title: `Nueva Orden: ${o.deviceBrand}`,
-            description: `${o.customer?.firstName} ${o.customer?.lastName} - ${o.reportedIssue}`,
+            title: `Nueva Orden: ${o.brand || o.equipment}`,
+            description: `${o.customer?.name} - ${o.description}`,
             time: o.createdAt
         })),
         ...recentReports.map(r => ({
             id: r.id,
             type: 'REPORT_ADDED' as const,
             title: "Reporte Técnico",
-            description: `Reparación finalizada para ${r.workOrder.deviceBrand} ${r.workOrder.deviceModel}`,
+            description: `Reparación finalizada para ${r.workOrder.brand} ${r.workOrder.model}`,
             time: r.createdAt,
             image: (r.images as string[])[0]
         }))
@@ -77,13 +77,13 @@ export default async function DashboardPage() {
     // 6. Datos de exportación
     const ordersForExport = await prisma.workOrder.findMany({
         select: {
-            trackingCode: true,
-            reportedIssue: true,
-            deviceBrand: true,
-            deviceModel: true,
+            orderNumber: true,
+            description: true,
+            brand: true,
+            model: true,
             status: true,
             createdAt: true,
-            customer: { select: { firstName: true, lastName: true } },
+            customer: { select: { name: true } },
         },
         orderBy: { createdAt: "desc" },
         take: 200,

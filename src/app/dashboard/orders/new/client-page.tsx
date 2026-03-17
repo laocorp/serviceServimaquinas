@@ -9,8 +9,7 @@ import { createCustomerInline } from "@/actions/customers";
 // ─── Tipos ────────────────────────────────────────────────────────────────
 type Customer = {
     id: string;
-    firstName: string;
-    lastName: string;
+    name: string;
     isVIP: boolean;
     phone: string | null;
     email: string | null;
@@ -44,7 +43,8 @@ function CustomerCombobox({
     }, []);
 
     const filtered = customers.filter(c => {
-        const full = `${c.firstName} ${c.lastName} ${c.phone ?? ""} ${c.email ?? ""}`.toLowerCase();
+        const name = c.name || "";
+        const full = `${name} ${c.phone ?? ""} ${c.email ?? ""}`.toLowerCase();
         return full.includes(query.toLowerCase());
     });
 
@@ -74,7 +74,7 @@ function CustomerCombobox({
                     <div className="flex-1 flex items-center gap-2">
                         {selected.isVIP && <span className="text-amber-500 text-xs">🌟</span>}
                         <span className="text-sm font-semibold text-slate-900 dark:text-white">
-                            {selected.firstName} {selected.lastName}
+                            {selected.name}
                         </span>
                         {(selected.phone || selected.email) && (
                             <span className="text-xs text-zinc-400">
@@ -88,7 +88,7 @@ function CustomerCombobox({
                         value={query}
                         onChange={e => { setQuery(e.target.value); setOpen(true); }}
                         onFocus={() => setOpen(true)}
-                        placeholder={selected ? `${selected.firstName} ${selected.lastName}` : "Busca por nombre, teléfono o email..."}
+                        placeholder={selected ? selected.name : "Busca por nombre, teléfono o email..."}
                         className="flex-1 bg-transparent outline-none text-sm text-slate-900 dark:text-white placeholder:text-zinc-400"
                         autoComplete="off"
                     />
@@ -131,12 +131,12 @@ function CustomerCombobox({
                                         }`}
                                 >
                                     <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-xs font-bold text-slate-600 dark:text-zinc-300 flex-shrink-0">
-                                        {c.firstName[0]}{c.lastName[0]}
+                                        {(c.name || "S")[0]}
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                                             {c.isVIP && <span className="text-amber-400 mr-1">🌟</span>}
-                                            {c.firstName} {c.lastName}
+                                            {c.name}
                                         </p>
                                         <p className="text-xs text-zinc-400 truncate">
                                             {c.phone ?? c.email ?? "Sin contacto"}
@@ -186,15 +186,12 @@ function QuickCustomerModal({
     onCreated: (customer: Customer) => void;
 }) {
     const [isPending, startTransition] = useTransition();
-    const [firstName, setFirstName] = useState("");
-    const [lastName, setLastName] = useState("");
+    const [name, setName] = useState("");
 
     // Pre-llenar si venía de la búsqueda
     useEffect(() => {
         if (open && initialName) {
-            const parts = initialName.trim().split(" ");
-            setFirstName(parts[0] ?? "");
-            setLastName(parts.slice(1).join(" ") ?? "");
+            setName(initialName);
         }
     }, [open, initialName]);
 
@@ -206,10 +203,10 @@ function QuickCustomerModal({
         startTransition(async () => {
             const res = await createCustomerInline(fd);
             if (res && 'error' in res) {
-                toast.error(res.error as string);
+                toast.error((res as any).error as string);
             } else {
-                const created = res as Customer;
-                toast.success(`Cliente ${created.firstName} ${created.lastName} creado ✓`);
+                const created = res as any;
+                toast.success(`Cliente ${created.name} creado ✓`);
                 onCreated(created);
                 onClose();
             }
@@ -236,40 +233,26 @@ function QuickCustomerModal({
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-                    <div className="grid grid-cols-2 gap-3">
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Nombre *</label>
-                            <input
-                                name="firstName"
-                                type="text"
-                                required
-                                value={firstName}
-                                onChange={e => setFirstName(e.target.value)}
-                                placeholder="Juan"
-                                className="w-full px-3 py-2.5 text-sm bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
-                            />
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Apellido *</label>
-                            <input
-                                name="lastName"
-                                type="text"
-                                required
-                                value={lastName}
-                                onChange={e => setLastName(e.target.value)}
-                                placeholder="Pérez"
-                                className="w-full px-3 py-2.5 text-sm bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
-                            />
-                        </div>
+                    <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Nombre Completo *</label>
+                        <input
+                            name="name"
+                            type="text"
+                            required
+                            value={name}
+                            onChange={e => setName(e.target.value)}
+                            placeholder="Juan Pérez"
+                            className="w-full px-4 py-3 text-sm bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
+                        />
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">RUC / CI</label>
+                        <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">DNI / RUC</label>
                         <input
-                            name="documentId"
+                            name="dni"
                             type="text"
                             placeholder="Ej. 123456789-0"
-                            className="w-full px-3 py-2.5 text-sm bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
+                            className="w-full px-4 py-3 text-sm bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
                         />
                     </div>
 
@@ -279,7 +262,7 @@ function QuickCustomerModal({
                             name="phone"
                             type="tel"
                             placeholder="0999 000 000"
-                            className="w-full px-3 py-2.5 text-sm bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
+                            className="w-full px-4 py-3 text-sm bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
                         />
                     </div>
 
@@ -289,17 +272,17 @@ function QuickCustomerModal({
                             name="email"
                             type="email"
                             placeholder="cliente@email.com"
-                            className="w-full px-3 py-2.5 text-sm bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
+                            className="w-full px-4 py-3 text-sm bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white"
                         />
                     </div>
 
                     <div className="flex gap-2 pt-2">
                         <button type="button" onClick={onClose}
-                            className="flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                            className="flex-1 px-4 py-3 rounded-xl text-sm font-semibold text-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
                             Cancelar
                         </button>
                         <button type="submit" disabled={isPending}
-                            className="flex-1 px-4 py-2.5 bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-xl text-sm font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors disabled:opacity-50">
+                            className="flex-1 px-4 py-3 bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-xl text-sm font-bold hover:bg-slate-800 dark:hover:bg-slate-100 transition-colors disabled:opacity-50">
                             {isPending ? "Guardando..." : "Guardar cliente"}
                         </button>
                     </div>
@@ -335,7 +318,7 @@ export default function NewOrderClient({
             return;
         }
         const formData = new FormData(e.currentTarget);
-        formData.append("createdById", currentUserId);
+        formData.append("creatorId", currentUserId);
         formData.append("customerId", selectedCustomerId);
 
         startTransition(async () => {
@@ -343,13 +326,13 @@ export default function NewOrderClient({
             if (result && 'error' in result) {
                 toast.error(result.error);
             } else {
-                toast.success("Orden de trabajo creada. Código de rastreo generado automáticamente.");
+                toast.success("Orden de trabajo creada exitosamente.");
             }
         });
     };
 
     return (
-        <>
+        <div className="max-w-3xl mx-auto flex flex-col gap-8">
             {/* Modal de cliente rápido */}
             <QuickCustomerModal
                 open={modalOpen}
@@ -358,114 +341,120 @@ export default function NewOrderClient({
                 onCreated={handleCustomerCreated}
             />
 
-            <div className="max-w-3xl mx-auto flex flex-col gap-8">
-                {/* Header */}
-                <div className="flex items-center gap-4">
-                    <Link href="/dashboard/orders" className="p-2 -ml-2 rounded-xl text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
-                        </svg>
-                    </Link>
-                    <div>
-                        <h1 className="text-3xl font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight">Recepción de Equipo</h1>
-                        <p className="text-zinc-500 mt-1">Abre una nueva orden de servicio técnico para un cliente.</p>
-                    </div>
+            {/* Header */}
+            <div className="flex items-center gap-4">
+                <Link href="/dashboard/orders" className="p-2 -ml-2 rounded-xl text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+                    </svg>
+                </Link>
+                <div>
+                    <h1 className="text-3xl font-extrabold text-slate-900 dark:text-zinc-100 tracking-tight">Recepción de Equipo</h1>
+                    <p className="text-zinc-500 mt-1">Abre una nueva orden de servicio técnico para un cliente.</p>
                 </div>
+            </div>
 
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm">
-                    <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+            <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-3xl p-8 shadow-sm">
+                <form onSubmit={handleSubmit} className="flex flex-col gap-8">
 
-                        {/* SECCIÓN 1: CLIENTE con Combobox */}
-                        <div>
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-4 border-b border-zinc-100 dark:border-zinc-800/50 pb-2">
-                                1. Selección de Cliente
-                            </h3>
+                    {/* SECCIÓN 1: CLIENTE con Combobox */}
+                    <div>
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-4 border-b border-zinc-100 dark:border-zinc-800/50 pb-2">
+                            1. Selección de Cliente
+                        </h3>
+                        <div className="flex flex-col gap-2">
+                            <div className="flex items-center justify-between">
+                                <label className="text-sm font-semibold text-slate-900 dark:text-zinc-200">
+                                    Cliente *
+                                </label>
+                                <span className="text-xs text-zinc-400">{customers.length} clientes en el CRM</span>
+                            </div>
+                            <CustomerCombobox
+                                customers={customers}
+                                selectedId={selectedCustomerId}
+                                onChange={setSelectedCustomerId}
+                                onCreateNew={() => { setSearchQuery(""); setModalOpen(true); }}
+                            />
+                            {/* Info del cliente seleccionado */}
+                            {selectedCustomerId && (() => {
+                                const c = customers.find(x => x.id === selectedCustomerId);
+                                if (!c) return null;
+                                return (
+                                    <div className="flex items-center gap-3 mt-1 px-3 py-2 bg-blue-50 dark:bg-blue-900/15 rounded-xl border border-blue-100 dark:border-blue-800/30">
+                                        <svg className="text-blue-500 flex-shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                            <polyline points="20 6 9 17 4 12" />
+                                        </svg>
+                                        <p className="text-xs text-blue-700 dark:text-blue-300">
+                                            <span className="font-semibold">{c.name}</span>
+                                            {c.isVIP && " · Cliente VIP 🌟"}
+                                            {c.phone && ` · ${c.phone}`}
+                                            {c.email && ` · ${c.email}`}
+                                        </p>
+                                    </div>
+                                );
+                            })()}
+                        </div>
+                    </div>
+
+                    {/* SECCIÓN 2: EQUIPO */}
+                    <div>
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-4 border-b border-zinc-100 dark:border-zinc-800/50 pb-2">2. Datos del Dispositivo</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="flex flex-col gap-2">
-                                <div className="flex items-center justify-between">
-                                    <label className="text-sm font-semibold text-slate-900 dark:text-zinc-200">
-                                        Cliente *
-                                    </label>
-                                    <span className="text-xs text-zinc-400">{customers.length} clientes en el CRM</span>
-                                </div>
-                                <CustomerCombobox
-                                    customers={customers}
-                                    selectedId={selectedCustomerId}
-                                    onChange={setSelectedCustomerId}
-                                    onCreateNew={() => { setSearchQuery(""); setModalOpen(true); }}
-                                />
-                                {/* Info del cliente seleccionado */}
-                                {selectedCustomerId && (() => {
-                                    const c = customers.find(x => x.id === selectedCustomerId);
-                                    if (!c) return null;
-                                    return (
-                                        <div className="flex items-center gap-3 mt-1 px-3 py-2 bg-blue-50 dark:bg-blue-900/15 rounded-xl border border-blue-100 dark:border-blue-800/30">
-                                            <svg className="text-blue-500 flex-shrink-0" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                                <polyline points="20 6 9 17 4 12" />
-                                            </svg>
-                                            <p className="text-xs text-blue-700 dark:text-blue-300">
-                                                <span className="font-semibold">{c.firstName} {c.lastName}</span>
-                                                {c.isVIP && " · Cliente VIP 🌟"}
-                                                {c.phone && ` · ${c.phone}`}
-                                                {c.email && ` · ${c.email}`}
-                                            </p>
-                                        </div>
-                                    );
-                                })()}
+                                <label htmlFor="equipment" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Equipo *</label>
+                                <input id="equipment" name="equipment" type="text" required
+                                    placeholder="Ej. Amoladora, Taladro, Sierra"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white" />
+                            </div>
+                            <div className="flex flex-col gap-2">
+                                <label htmlFor="brand" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Marca</label>
+                                <input id="brand" name="brand" type="text"
+                                    placeholder="Ej. Bosch, Makita"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white" />
                             </div>
                         </div>
-
-                        {/* SECCIÓN 2: EQUIPO */}
-                        <div>
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-4 border-b border-zinc-100 dark:border-zinc-800/50 pb-2">2. Datos del Dispositivo</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="flex flex-col gap-2">
-                                    <label htmlFor="deviceBrand" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Marca *</label>
-                                    <input id="deviceBrand" name="deviceBrand" type="text" required
-                                        placeholder="Ej. Bosch, Makita, DeWalt"
-                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white" />
-                                </div>
-                                <div className="flex flex-col gap-2">
-                                    <label htmlFor="deviceModel" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Modelo *</label>
-                                    <input id="deviceModel" name="deviceModel" type="text" required
-                                        placeholder="Ej. GSB 18V-50"
-                                        className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white" />
-                                </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                            <div className="flex flex-col gap-2">
+                                <label htmlFor="model" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Modelo</label>
+                                <input id="model" name="model" type="text"
+                                    placeholder="Ej. GSB 18V-50"
+                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white" />
                             </div>
-                            <div className="flex flex-col gap-2 mt-6">
-                                <label htmlFor="deviceSerial" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Número de Serie (Opcional/Recomendado)</label>
-                                <input id="deviceSerial" name="deviceSerial" type="text"
-                                    placeholder="S/N del equipo para garantías..."
+                            <div className="flex flex-col gap-2">
+                                <label htmlFor="serialNumber" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Número de Serie</label>
+                                <input id="serialNumber" name="serialNumber" type="text"
+                                    placeholder="S/N del equipo..."
                                     className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white font-mono" />
                             </div>
                         </div>
+                    </div>
 
-                        {/* SECCIÓN 3: PROBLEMA */}
-                        <div>
-                            <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-4 border-b border-zinc-100 dark:border-zinc-800/50 pb-2">3. Recepción y Diagnóstico Inicial</h3>
-                            <div className="flex flex-col gap-2">
-                                <label htmlFor="reportedIssue" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Falla Reportada por el Cliente *</label>
-                                <textarea id="reportedIssue" name="reportedIssue" rows={4} required
-                                    placeholder="El cliente indica que al encender la máquina hace un ruido metálico y pierde potencia a los 5 minutos..."
-                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white resize-none" />
-                            </div>
+                    {/* SECCIÓN 3: PROBLEMA */}
+                    <div>
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-zinc-400 dark:text-zinc-500 mb-4 border-b border-zinc-100 dark:border-zinc-800/50 pb-2">3. Recepción y Diagnóstico Inicial</h3>
+                        <div className="flex flex-col gap-2">
+                            <label htmlFor="description" className="text-sm font-semibold text-slate-900 dark:text-zinc-200">Falla Reportada por el Cliente *</label>
+                            <textarea id="description" name="description" rows={4} required
+                                placeholder="El cliente indica que al encender la máquina hace un ruido metálico..."
+                                className="w-full px-4 py-3 bg-slate-50 dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all dark:text-white resize-none" />
                         </div>
+                    </div>
 
-                        {/* Footer */}
-                        <div className="pt-4 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800/50 mt-4">
-                            <p className="text-xs text-zinc-400 max-w-[50%]">Se generará automáticamente un <strong className="text-slate-900 dark:text-white">Código de Rastreo</strong> web para que el cliente siga el progreso.</p>
-                            <div className="flex items-center gap-4">
-                                <Link href="/dashboard/orders" className="px-6 py-3 rounded-xl text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                                    Cancelar
-                                </Link>
-                                <button type="submit" disabled={isPending || !selectedCustomerId}
-                                    className="flex items-center gap-2 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-8 py-3 rounded-xl text-sm font-bold shadow-sm hover:shadow-md transition-all hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed">
-                                    {isPending ? "Generando..." : "Ingresar Orden"}
-                                </button>
-                            </div>
+                    {/* Footer */}
+                    <div className="pt-4 flex items-center justify-between border-t border-zinc-100 dark:border-zinc-800/50 mt-4">
+                        <p className="text-xs text-zinc-400 max-w-[50%]">Se generará automáticamente un número de orden para seguimiento interno.</p>
+                        <div className="flex items-center gap-4">
+                            <Link href="/dashboard/orders" className="px-6 py-3 rounded-xl text-sm font-semibold text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+                                Cancelar
+                            </Link>
+                            <button type="submit" disabled={isPending || !selectedCustomerId}
+                                className="flex items-center gap-2 bg-slate-900 text-white dark:bg-white dark:text-slate-900 px-8 py-3 rounded-xl text-sm font-bold shadow-sm hover:shadow-md transition-all hover:bg-slate-800 dark:hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                                {isPending ? "Ingresando..." : "Ingresar Orden"}
+                            </button>
                         </div>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
-        </>
+        </div>
     );
 }

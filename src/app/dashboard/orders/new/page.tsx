@@ -18,14 +18,13 @@ export default async function NewOrderPage() {
     const customers = await prisma.customer.findMany({
         select: {
             id: true,
-            firstName: true,
-            lastName: true,
+            name: true,
             isVIP: true,
             email: true,
             phone: true,
         },
         orderBy: {
-            firstName: 'asc'
+            name: 'asc'
         }
     });
 

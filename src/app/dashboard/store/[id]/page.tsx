@@ -7,35 +7,13 @@ import Link from "next/link";
 export default async function EditProductPage({ params }: { params: Promise<{ id: string }> }) {
     const { id: productId } = await params;
 
-    let product;
-    try {
-        // Log to identify the ID format causing the error
-        console.log("Fetching product with ID:", productId);
-
-        product = await (prisma as any).product.findUnique({
-            where: { id: productId }
-        });
-    } catch (error: any) {
-        console.error("Error fetching product:", error.message);
-        // If it was an Int mismatch, the message would confirm.
-        // We try a fallback in case it was expecting a number (legacy data)
-        try {
-            const numericId = parseInt(productId);
-            if (!isNaN(numericId)) {
-                product = await (prisma as any).product.findUnique({
-                    where: { id: numericId as any }
-                });
-            }
-        } catch (e) {
-            console.error("Fallback fetch failed too.");
-        }
-
-        if (!product) throw error;
-    }
+    const product = await prisma.product.findUnique({
+        where: { id: productId }
+    });
 
     if (!product) notFound();
 
-    let categories = [];
+    let categories: any[] = [];
     try {
         categories = await getStoreCategories();
     } catch (error) {

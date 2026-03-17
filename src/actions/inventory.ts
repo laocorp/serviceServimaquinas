@@ -11,18 +11,18 @@ export async function createInventoryItem(formData: FormData) {
         await ensureStaff();
 
         const rawData = {
-            code: formData.get("code") as string,
+            sku: formData.get("sku") as string,
             name: formData.get("name") as string,
             description: formData.get("description") as string,
-            price: parseFloat(formData.get("price") as string),
-            stock: parseInt(formData.get("stock") as string, 10),
-            minStock: parseInt(formData.get("minStock") as string, 10),
+            unitPrice: parseFloat(formData.get("unitPrice") as string),
+            quantity: parseInt(formData.get("quantity") as string, 10),
+            minQuantity: parseInt(formData.get("minQuantity") as string, 10),
         };
 
         const validated = inventorySchema.parse(rawData);
 
         const existing = await prisma.inventoryItem.findUnique({
-            where: { code: validated.code }
+            where: { sku: validated.sku }
         });
 
         if (existing) {
@@ -46,18 +46,18 @@ export async function updateInventoryItem(id: string, formData: FormData) {
         await ensureStaff();
 
         const rawData = {
-            code: formData.get("code") as string,
+            sku: formData.get("sku") as string,
             name: formData.get("name") as string,
             description: formData.get("description") as string,
-            price: parseFloat(formData.get("price") as string),
-            stock: parseInt(formData.get("stock") as string, 10),
-            minStock: parseInt(formData.get("minStock") as string, 10),
+            unitPrice: parseFloat(formData.get("unitPrice") as string),
+            quantity: parseInt(formData.get("quantity") as string, 10),
+            minQuantity: parseInt(formData.get("minQuantity") as string, 10),
         };
 
         const validated = inventorySchema.parse(rawData);
 
         const existing = await prisma.inventoryItem.findUnique({
-            where: { code: validated.code }
+            where: { sku: validated.sku }
         });
 
         if (existing && existing.id !== id) {
@@ -82,7 +82,7 @@ export async function deleteInventoryItem(id: string) {
         await ensureAdmin();
 
         const isUsed = await prisma.workOrderItem.findFirst({
-            where: { inventoryItemId: id }
+            where: { itemId: id }
         });
 
         if (isUsed) {

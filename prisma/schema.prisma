@@ -38,14 +38,14 @@ model User {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   workOrders    WorkOrder[] @relation("TechnicianOrders")
-  createdOrders WorkOrder[] @relation("CreatorOrders")
+  createdOrders WorkOrder[]   @relation("CreatorOrders")
   reports       WorkReport[]
 }
 
 model Customer {
   id         String      @id @default(cuid())
   name       String
-  email      String?
+  email      String?     @unique
   phone      String?
   address    String?
   dni        String?     @unique
@@ -78,7 +78,7 @@ model WorkOrder {
   technician     User?           @relation("TechnicianOrders", fields: [technicianId], references: [id])
   creator        User            @relation("CreatorOrders", fields: [creatorId], references: [id])
   items          WorkOrderItem[]
-  reports        WorkReport[]
+  report         WorkReport?
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
 }
@@ -89,16 +89,16 @@ model WorkOrderItem {
   itemId      String?
   description String
   quantity    Int
-  unitPrice   Decimal   @db.Decimal(10, 2)
-  totalPrice  Decimal   @db.Decimal(10, 2)
+  unitPrice   Decimal        @db.Decimal(10, 2)
+  totalPrice  Decimal        @db.Decimal(10, 2)
   workOrder   WorkOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  item        InventoryItem? @relation(fields: [itemId], references: [id])
+  inventoryItem InventoryItem? @relation(fields: [itemId], references: [id])
 }
 
 model InventoryItem {
   id          String          @id @default(cuid())
   name        String
-  sku         String?         @unique
+  sku         String          @unique
   description String?
   quantity    Int             @default(0)
   minQuantity Int             @default(0)
@@ -117,25 +117,31 @@ model Category {
 }
 
 model WorkReport {
-  id          String    @id @default(cuid())
-  orderId     String
-  userId      String
-  content     String
-  createdAt   DateTime  @default(now())
-  workOrder   WorkOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  user        User      @relation(fields: [userId], references: [id])
+  id              String    @id @default(cuid())
+  orderId         String    @unique
+  technicianId    String
+  diagnosis       String
+  actionsTaken    String
+  recommendations String?
+  images          String[]
+  createdAt       DateTime  @default(now())
+  workOrder       WorkOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  technician      User      @relation(fields: [technicianId], references: [id])
 }
 
 model SystemSettings {
-  id              String   @id @default("default")
-  companyName     String   @default("Servimaquinas")
-  address         String?
-  phone           String?
-  email           String?
-  logoUrl         String?
-  currencySymbol  String   @default("$")
-  taxRate         Decimal  @default(0) @db.Decimal(5, 2)
-  updatedAt       DateTime @updatedAt
+  id             String   @id @default("default")
+  companyName    String   @default("Servimaquinas")
+  documentId     String?
+  address        String?
+  phone          String?
+  email          String?
+  logoUrl        String?
+  publicUrl      String?  @default("http://localhost:3000")
+  currency       String?  @default("USD")
+  currencySymbol String   @default("$")
+  taxRate        Decimal  @default(0) @db.Decimal(5, 2)
+  updatedAt      DateTime @updatedAt
 }
 
 model StoreCategory {
@@ -150,11 +156,14 @@ model Product {
   name        String
   description String?
   price       Decimal       @db.Decimal(10, 2)
-  imageUrl    String?
-  categoryId  String
+  stock       Int           @default(0)
+  image       String?
+  isPromotion Boolean       @default(false)
+  promoPrice  Decimal?      @db.Decimal(10, 2)
+  categoryId  String?
   featured    Boolean       @default(false)
   active      Boolean       @default(true)
-  category    StoreCategory @relation(fields: [categoryId], references: [id])
+  category    StoreCategory? @relation(fields: [categoryId], references: [id])
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 }

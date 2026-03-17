@@ -54,7 +54,7 @@ export async function deleteUser(userId: string) {
     try {
         // No permitir eliminar si tiene órdenes asignadas
         const hasOrders = await prisma.workOrder.findFirst({
-            where: { OR: [{ createdById: userId }, { technicianId: userId }] }
+            where: { OR: [{ creatorId: userId }, { technicianId: userId }] }
         });
         if (hasOrders) {
             return { error: "Este usuario tiene órdenes de trabajo asociadas y no puede eliminarse." };

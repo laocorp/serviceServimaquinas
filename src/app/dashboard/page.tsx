@@ -70,7 +70,7 @@ export default async function DashboardPage() {
             title: "Reporte Técnico",
             description: `Reparación finalizada para ${r.workOrder.brand} ${r.workOrder.model}`,
             time: r.createdAt,
-            image: (r.images as string[])[0]
+            image: (r.images as string[])?.length > 0 ? (r.images as string[])[0] : undefined
         }))
     ].sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 8);
 
@@ -136,7 +136,7 @@ export default async function DashboardPage() {
                         </div>
                     </div>
                     <div className="flex-1 overflow-y-auto no-scrollbar">
-                        <ActivityTimeline items={timelineItems as any} />
+                        <ActivityTimeline items={timelineItems} />
                     </div>
                 </div>
 

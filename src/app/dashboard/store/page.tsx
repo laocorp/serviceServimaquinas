@@ -17,8 +17,8 @@ export default async function StoreManagementPage() {
         );
     }
 
-    const products = await (prisma as any).product.findMany({
-        include: { storeCategory: true },
+    const products = await prisma.product.findMany({
+        include: { category: true },
         orderBy: { createdAt: 'desc' }
     });
 
@@ -53,7 +53,7 @@ export default async function StoreManagementPage() {
                         <Link href="/dashboard/store/new" className="text-[#0073CF] font-bold mt-2 inline-block hover:underline">Empieza por añadir el primero</Link>
                     </div>
                 ) : (
-                    products.map((product: any) => (
+                    products.map((product) => (
                         <div key={product.id} className="group bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-all">
                             <div className="aspect-square bg-zinc-100 dark:bg-zinc-800 relative overflow-hidden">
                                 {product.image ? (
@@ -73,18 +73,18 @@ export default async function StoreManagementPage() {
                             </div>
                             <div className="p-4">
                                 <p className="text-[10px] uppercase tracking-widest text-[#0073CF] font-bold mb-1">
-                                    {product.storeCategory?.name || "Sin Categoría"}
+                                    {product.category?.name || "Sin Categoría"}
                                 </p>
                                 <h3 className="font-bold text-slate-900 dark:text-zinc-100 text-sm mb-2 line-clamp-1">{product.name}</h3>
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex flex-col">
                                         {product.isPromotion && product.promoPrice ? (
                                             <>
-                                                <span className="text-xs text-zinc-400 line-through">${product.price.toLocaleString()}</span>
-                                                <span className="text-lg font-black text-red-600">${product.promoPrice.toLocaleString()}</span>
+                                                <span className="text-xs text-zinc-400 line-through">${Number(product.price).toLocaleString()}</span>
+                                                <span className="text-lg font-black text-red-600">${Number(product.promoPrice).toLocaleString()}</span>
                                             </>
                                         ) : (
-                                            <span className="text-lg font-black text-slate-900 dark:text-zinc-100">${product.price.toLocaleString()}</span>
+                                            <span className="text-lg font-black text-slate-900 dark:text-zinc-100">${Number(product.price).toLocaleString()}</span>
                                         )}
                                     </div>
                                     <div className="text-right">

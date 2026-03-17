@@ -402,7 +402,7 @@ export default function LandingPageClient({ settings, products }: { settings: an
                   <div className="p-12">
                     <div className="flex justify-between items-start mb-6">
                       <div>
-                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-2">{item.storeCategory?.name || "Official Edition"}</p>
+                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] mb-2">{item.category?.name || "Official Edition"}</p>
                         <h4 className="text-2xl font-black text-slate-950 leading-tight line-clamp-2 h-16">{item.name}</h4>
                       </div>
                     </div>
@@ -411,11 +411,11 @@ export default function LandingPageClient({ settings, products }: { settings: an
                       <div className="flex flex-col">
                         {item.promoPrice ? (
                           <>
-                            <span className="text-xs text-slate-400 line-through font-bold mb-1">${item.price.toLocaleString()}</span>
-                            <span className="text-4xl font-black text-slate-950 tracking-tighter">${item.promoPrice.toLocaleString()}</span>
+                            <span className="text-xs text-slate-400 line-through font-bold mb-1">${Number(item.unitPrice).toLocaleString()}</span>
+                            <span className="text-4xl font-black text-slate-950 tracking-tighter">${Number(item.promoPrice).toLocaleString()}</span>
                           </>
                         ) : (
-                          <span className="text-4xl font-black text-slate-950 tracking-tighter">${item.price.toLocaleString()}</span>
+                          <span className="text-4xl font-black text-slate-950 tracking-tighter">${Number(item.unitPrice).toLocaleString()}</span>
                         )}
                       </div>
                       <a

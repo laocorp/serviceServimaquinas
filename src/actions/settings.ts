@@ -5,23 +5,39 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 
 export async function getSettings() {
-    let settings = await prisma.systemSettings.findUnique({
-        where: { id: "global" }
-    });
-
-    if (!settings) {
-        settings = await prisma.systemSettings.create({
-            data: {
-                id: "global",
-                companyName: "Servimaquinas",
-                phone: "",
-                publicUrl: "http://localhost:3000",
-                currency: "USD"
-            }
+    try {
+        let settings = await prisma.systemSettings.findUnique({
+            where: { id: "global" }
         });
-    }
 
-    return settings;
+        if (!settings) {
+            settings = await prisma.systemSettings.create({
+                data: {
+                    id: "global",
+                    companyName: "Servimaquinas",
+                    phone: "",
+                    publicUrl: "http://localhost:3000",
+                    currency: "USD"
+                }
+            });
+        }
+
+        return settings;
+    } catch (error) {
+        console.error("BUILD_LOG: Error fetching settings, using defaults.", error);
+        return {
+            id: "global",
+            companyName: "Servimaquinas",
+            phone: "",
+            publicUrl: "http://localhost:3000",
+            currency: "USD",
+            currencySymbol: "$",
+            address: "",
+            email: "",
+            logoUrl: null,
+            taxRate: 0,
+        };
+    }
 }
 
 export async function updateSettings(formData: FormData) {

@@ -128,9 +128,112 @@ export async function deleteCustomer(id: string) {
             return { error: "No se puede eliminar un cliente con historial de órdenes." };
         }
 
-        await prisma.customer.delete({ where: { id } });
+        await prisma.customer.delete({ where: { id: id } });
         revalidatePath("/dashboard/customers");
         return { success: true };
+    } catch (error: any) {
+        return handleServerError(error);
+    }
+}
+
+export async function registerTool(customerId: string, formData: FormData) {
+    try {
+        await ensureStaff();
+
+        const name = formData.get("name") as string;
+        const brand = formData.get("brand") as string;
+        const model = formData.get("model") as string;
+        const serialNumber = formData.get("serialNumber") as string;
+        const condition = formData.get("condition") as "NUEVA" | "USADA";
+        const isPurchasedHere = formData.get("isPurchasedHere") === "true";
+
+        if (!name || !brand || !serialNumber) {
+            throw new Error("Nombre, marca y serial son obligatorios.");
+        }
+
+        // Lógica de Mantenimiento Preventivo Bosch (Solo para NUEVAS)
+        let nextMaintenance: Date | null = null;
+        if (brand.toUpperCase() === "BOSCH" && condition === "NUEVA") {
+            const now = new Date();
+            // Programar para dentro de 3 meses
+            nextMaintenance = new Date(now.setMonth(now.getMonth() + 3));
+        }
+
+        const tool = await prisma.customerTool.create({
+            data: {
+                customerId,
+                name,
+                brand,
+                model: model || null,
+                serialNumber,
+                condition,
+                isPurchasedHere,
+                nextMaintenance,
+                purchaseDate: isPurchasedHere ? new Date() : null
+            }
+        });
+
+        revalidatePath(`/dashboard/customers/${customerId}`);
+        return { success: "Herramienta registrada correctamente", data: tool };
+
+    } catch (error: any) {
+        return handleServerError(error);
+    }
+}
+
+export async function getCustomerTools(customerId: string) {
+    try {
+        return await prisma.customerTool.findMany({
+            where: { customerId },
+            include: { maintenanceLogs: { orderBy: { serviceDate: "desc" } } },
+            orderBy: { createdAt: "desc" }
+        });
+    } catch (error) {
+        return [];
+    }
+}
+
+export async function performMaintenance(toolId: string, formData: FormData) {
+    try {
+        await ensureStaff();
+
+        const description = formData.get("description") as string;
+        const observations = formData.get("observations") as string;
+        const nextDateStr = formData.get("nextDate") as string;
+
+        if (!description || !nextDateStr) {
+            throw new Error("Descripción y próxima fecha son obligatorias.");
+        }
+
+        const nextDate = new Date(nextDateStr);
+        const tool = await prisma.customerTool.findUnique({
+            where: { id: toolId },
+            select: { customerId: true }
+        });
+
+        if (!tool) throw new Error("Equipo no encontrado.");
+
+        const log = await prisma.maintenanceLog.create({
+            data: {
+                toolId,
+                description,
+                observations,
+                nextDate,
+                serviceDate: new Date()
+            }
+        });
+
+        // Actualizar la herramienta con la nueva fecha programada
+        await prisma.customerTool.update({
+            where: { id: toolId },
+            data: { nextMaintenance: nextDate }
+        });
+
+        revalidatePath(`/dashboard/customers/${tool.customerId}`);
+        revalidatePath("/dashboard"); // Para actualizar alertas
+
+        return { success: "Mantenimiento registrado correctamente", data: log };
+
     } catch (error: any) {
         return handleServerError(error);
     }

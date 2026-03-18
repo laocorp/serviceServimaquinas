@@ -16,5 +16,10 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         notFound();
     }
 
-    return <EditInventoryItemPage item={item} role={role} />;
+    const serializedItem = {
+        ...item,
+        unitPrice: Number(item.unitPrice)
+    };
+
+    return <EditInventoryItemPage item={serializedItem as any} role={role} />;
 }

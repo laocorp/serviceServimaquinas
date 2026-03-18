@@ -37,7 +37,7 @@ export async function createStoreCategory(name: string) {
 
 export async function getStoreProducts(query?: string) {
     try {
-        return await prisma.product.findMany({
+        const products = await prisma.product.findMany({
             where: query ? {
                 OR: [
                     { name: { contains: query, mode: 'insensitive' } },
@@ -47,6 +47,12 @@ export async function getStoreProducts(query?: string) {
             include: { category: true },
             orderBy: { createdAt: "desc" }
         });
+
+        return products.map(p => ({
+            ...p,
+            price: Number(p.price),
+            promoPrice: p.promoPrice ? Number(p.promoPrice) : null
+        }));
     } catch (error) {
         return [];
     }
@@ -54,11 +60,17 @@ export async function getStoreProducts(query?: string) {
 
 export async function getPromotionProducts() {
     try {
-        return await prisma.product.findMany({
+        const products = await prisma.product.findMany({
             where: { isPromotion: true },
             include: { category: true },
             take: 20
         });
+
+        return products.map(p => ({
+            ...p,
+            price: Number(p.price),
+            promoPrice: p.promoPrice ? Number(p.promoPrice) : null
+        }));
     } catch (error) {
         return [];
     }

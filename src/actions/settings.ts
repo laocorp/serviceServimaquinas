@@ -22,7 +22,10 @@ export async function getSettings() {
             });
         }
 
-        return settings;
+        return {
+            ...settings,
+            taxRate: Number(settings.taxRate)
+        };
     } catch (error) {
         console.error("BUILD_LOG: Error fetching settings, using defaults.", error);
         return {

@@ -62,13 +62,51 @@ export async function updateOrderStatus(
             data.laborCost = laborCost;
         }
 
+        const oldOrder = await prisma.workOrder.findUnique({
+            where: { id: orderId },
+            select: { status: true, customerId: true, equipment: true, brand: true, model: true, serialNumber: true, totalCost: true }
+        });
+
         await prisma.workOrder.update({
             where: { id: orderId },
             data
         });
 
+        // Automatización CRM: Puntos y Registro de Herramientas
+        if (status === "ENTREGADO" && oldOrder && oldOrder.status !== "ENTREGADO") {
+            const pointsToAdd = Math.floor(Number(oldOrder.totalCost));
+
+            await prisma.customer.update({
+                where: { id: oldOrder.customerId },
+                data: {
+                    loyaltyPoints: { increment: pointsToAdd }
+                }
+            });
+
+            // Registrar herramienta en historial si no existe por serial
+            if (oldOrder.serialNumber) {
+                const existingTool = await prisma.customerTool.findUnique({
+                    where: { serialNumber: oldOrder.serialNumber }
+                });
+
+                if (!existingTool) {
+                    await prisma.customerTool.create({
+                        data: {
+                            customerId: oldOrder.customerId,
+                            name: oldOrder.equipment,
+                            brand: oldOrder.brand || "Genérica",
+                            model: oldOrder.model,
+                            serialNumber: oldOrder.serialNumber,
+                            condition: "USADA", // Las herramientas en reparación se asumen usadas
+                        }
+                    });
+                }
+            }
+        }
+
         revalidatePath(`/dashboard/orders/${orderId}`);
         revalidatePath("/dashboard/orders");
+        revalidatePath("/dashboard/customers");
         return { success: true };
     } catch (error) {
         return handleServerError(error);

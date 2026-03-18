@@ -29,69 +29,93 @@ enum Priority {
   URGENTE
 }
 
+enum ToolCondition {
+  NUEVA
+  USADA
+}
+
 model User {
-  id            String      @id @default(cuid())
+  id            String       @id @default(cuid())
   name          String?
-  email         String?     @unique
+  email         String?      @unique
   password      String?
-  role          Role        @default(TECNICO)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  workOrders    WorkOrder[] @relation("TechnicianOrders")
-  createdOrders WorkOrder[]   @relation("CreatorOrders")
+  role          Role         @default(TECNICO)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  workOrders    WorkOrder[]  @relation("TechnicianOrders")
+  createdOrders WorkOrder[]  @relation("CreatorOrders")
   reports       WorkReport[]
 }
 
 model Customer {
-  id         String      @id @default(cuid())
-  name       String
-  email      String?     @unique
-  phone      String?
-  address    String?
-  dni        String?     @unique
-  isVIP      Boolean     @default(false)
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  workOrders WorkOrder[]
+  id            String         @id @default(cuid())
+  name          String
+  email         String?        @unique
+  phone         String?
+  address       String?
+  dni           String?        @unique
+  isVIP         Boolean        @default(false)
+  loyaltyPoints Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  workOrders    WorkOrder[]
+  tools         CustomerTool[]
+}
+
+model CustomerTool {
+  id              String           @id @default(cuid())
+  customerId      String
+  name            String
+  brand           String
+  model           String?
+  serialNumber    String?          @unique
+  condition       ToolCondition    @default(USADA)
+  purchaseDate    DateTime?
+  isPurchasedHere Boolean          @default(false)
+  nextMaintenance DateTime?
+  customer        Customer         @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  maintenanceLogs MaintenanceLog[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
 }
 
 model WorkOrder {
-  id             String          @id @default(cuid())
-  orderNumber    String          @unique
-  customerId     String
-  technicianId   String?
-  creatorId      String
-  status         OrderStatus     @default(PENDIENTE)
-  priority       Priority        @default(MEDIA)
-  equipment      String
-  brand          String?
-  model          String?
-  serialNumber   String?
-  description    String
-  observations   String?
-  entryDate      DateTime        @default(now())
-  estimatedDate  DateTime?
-  deliveryDate   DateTime?
-  laborCost      Decimal         @default(0) @db.Decimal(10, 2)
-  totalCost      Decimal         @default(0) @db.Decimal(10, 2)
-  customer       Customer        @relation(fields: [customerId], references: [id])
-  technician     User?           @relation("TechnicianOrders", fields: [technicianId], references: [id])
-  creator        User            @relation("CreatorOrders", fields: [creatorId], references: [id])
-  items          WorkOrderItem[]
-  report         WorkReport?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  id            String          @id @default(cuid())
+  orderNumber   String          @unique
+  customerId    String
+  technicianId  String?
+  creatorId     String
+  status        OrderStatus     @default(PENDIENTE)
+  priority      Priority        @default(MEDIA)
+  equipment     String
+  brand         String?
+  model         String?
+  serialNumber  String?
+  description   String
+  observations  String?
+  entryDate     DateTime        @default(now())
+  estimatedDate DateTime?
+  deliveryDate  DateTime?
+  laborCost     Decimal         @default(0) @db.Decimal(10, 2)
+  totalCost     Decimal         @default(0) @db.Decimal(10, 2)
+  customer      Customer        @relation(fields: [customerId], references: [id])
+  technician    User?           @relation("TechnicianOrders", fields: [technicianId], references: [id])
+  creator       User            @relation("CreatorOrders", fields: [creatorId], references: [id])
+  items         WorkOrderItem[]
+  report        WorkReport?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
 }
 
 model WorkOrderItem {
-  id          String    @id @default(cuid())
-  orderId     String
-  itemId      String?
-  description String
-  quantity    Int
-  unitPrice   Decimal        @db.Decimal(10, 2)
-  totalPrice  Decimal        @db.Decimal(10, 2)
-  workOrder   WorkOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  id            String         @id @default(cuid())
+  orderId       String
+  itemId        String?
+  description   String
+  quantity      Int
+  unitPrice     Decimal        @db.Decimal(10, 2)
+  totalPrice    Decimal        @db.Decimal(10, 2)
+  workOrder     WorkOrder      @relation(fields: [orderId], references: [id], onDelete: Cascade)
   inventoryItem InventoryItem? @relation(fields: [itemId], references: [id])
 }
 
@@ -111,9 +135,9 @@ model InventoryItem {
 }
 
 model Category {
-  id             String          @id @default(cuid())
-  name           String          @unique
-  items          InventoryItem[]
+  id    String          @id @default(cuid())
+  name  String          @unique
+  items InventoryItem[]
 }
 
 model WorkReport {
@@ -152,18 +176,31 @@ model StoreCategory {
 }
 
 model Product {
-  id          String        @id @default(cuid())
+  id          String         @id @default(cuid())
   name        String
   description String?
-  price       Decimal       @db.Decimal(10, 2)
-  stock       Int           @default(0)
+  price       Decimal        @db.Decimal(10, 2)
+  stock       Int            @default(0)
   image       String?
-  isPromotion Boolean       @default(false)
-  promoPrice  Decimal?      @db.Decimal(10, 2)
+  isPromotion Boolean        @default(false)
+  promoPrice  Decimal?       @db.Decimal(10, 2)
   categoryId  String?
-  featured    Boolean       @default(false)
-  active      Boolean       @default(true)
+  featured    Boolean        @default(false)
+  active      Boolean        @default(true)
   category    StoreCategory? @relation(fields: [categoryId], references: [id])
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model MaintenanceLog {
+  id           String       @id @default(cuid())
+  toolId       String
+  technicianId String?
+  serviceDate  DateTime     @default(now())
+  description  String
+  observations String?
+  nextDate     DateTime
+  tool         CustomerTool @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 }

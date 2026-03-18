@@ -74,7 +74,20 @@ export default async function DashboardPage() {
         }))
     ].sort((a, b) => b.time.getTime() - a.time.getTime()).slice(0, 8);
 
-    // 6. Datos de exportación
+    // 6. Alertas de Mantenimiento (Próximos 30 días)
+    const upcomingMaintenance = await prisma.customerTool.findMany({
+        where: {
+            nextMaintenance: {
+                lte: new Date(new Date().setDate(new Date().getDate() + 30)),
+                gte: new Date()
+            }
+        },
+        include: { customer: true },
+        take: 3,
+        orderBy: { nextMaintenance: 'asc' }
+    });
+
+    // 7. Datos de exportación
     const ordersForExport = await prisma.workOrder.findMany({
         select: {
             orderNumber: true,
@@ -140,37 +153,55 @@ export default async function DashboardPage() {
                     </div>
                 </div>
 
-                {/* 4. Performance - Analytics Card */}
-                <div className="lg:col-span-4 bg-[#0073CF] rounded-[2.5rem] p-0.5 shadow-xl overflow-hidden group h-[400px]">
-                    <div className="h-full w-full bg-white dark:bg-zinc-950 rounded-[2.4rem] p-6 flex flex-col justify-between border-4 border-transparent group-hover:border-blue-500/5 transition-all">
-                        <div>
-                            <div className="flex items-center gap-2 mb-4">
-                                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
-                                    <TrendingUp className="w-4 h-4 text-blue-600" />
-                                </div>
-                                <h3 className="text-lg font-black text-slate-900 dark:text-zinc-100 tracking-tighter uppercase italic leading-none">
-                                    Performance
-                                </h3>
+                {/* 4. Mantenimientos Preventivos Bosch */}
+                <div className="lg:col-span-4 bg-slate-900 dark:bg-black rounded-[2.5rem] p-6 shadow-xl overflow-hidden flex flex-col border border-slate-800">
+                    <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-xs font-black text-blue-400 uppercase tracking-[0.2em] italic flex items-center gap-2">
+                            <Zap className="w-4 h-4" />
+                            Preventivo Bosch
+                        </h2>
+                        <span className="bg-blue-500/10 text-blue-400 text-[10px] font-black px-2 py-0.5 rounded-lg border border-blue-500/20">30 DÍAS</span>
+                    </div>
+
+                    <div className="flex flex-col gap-4 flex-1">
+                        {upcomingMaintenance.length === 0 ? (
+                            <div className="flex-1 flex flex-col items-center justify-center text-center px-4">
+                                <Package className="w-8 h-8 text-slate-700 mb-2 opacity-50" />
+                                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-none">Todo en orden</p>
+                                <p className="text-[9px] text-slate-600 mt-1">No hay mantenimientos venciendo pronto.</p>
                             </div>
-                            <p className="text-zinc-500 text-[11px] font-medium leading-relaxed mb-4 leading-normal">
-                                Taller al <span className="text-emerald-600 font-bold text-xs border-b border-emerald-200">87%</span> de capacidad.
-                            </p>
-                            <div className="grid grid-cols-2 gap-3 mb-6">
-                                <div className="bg-zinc-50 dark:bg-zinc-900 p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest leading-none mb-1">Cierre</p>
-                                    <p className="text-sm font-black text-slate-800 dark:text-zinc-200">2.4 d</p>
+                        ) : (
+                            upcomingMaintenance.map((tool: any) => (
+                                <div key={tool.id} className="bg-slate-800/40 border border-slate-700/50 rounded-2xl p-4 hover:border-blue-500/30 transition-all group">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <div>
+                                            <p className="text-[10px] font-black text-blue-400 uppercase tracking-tighter">{tool.name}</p>
+                                            <p className="text-xs font-black text-white">{tool.brand} {tool.model}</p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Serial</p>
+                                            <p className="text-[10px] font-mono font-bold text-slate-400">{tool.serialNumber}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-700/30">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-300">
+                                                {tool.customer?.name.charAt(0)}
+                                            </div>
+                                            <p className="text-[10px] font-bold text-slate-300 truncate max-w-[80px]">{tool.customer?.name}</p>
+                                        </div>
+                                        <p className="text-[10px] font-black text-emerald-400">
+                                            {tool.nextMaintenance ? new Date(tool.nextMaintenance).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '-'}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="bg-zinc-50 dark:bg-zinc-900 p-3 rounded-2xl border border-zinc-100 dark:border-zinc-800">
-                                    <p className="text-[9px] font-black text-zinc-400 uppercase tracking-widest leading-none mb-1">Satisf.</p>
-                                    <p className="text-sm font-black text-slate-800 dark:text-zinc-200">92%</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div className="w-full h-24 bg-slate-50 dark:bg-zinc-900 rounded-2xl border border-dashed border-zinc-200 dark:border-zinc-800 flex items-center justify-center relative overflow-hidden">
-                            <p className="text-[8px] font-bold text-zinc-400 uppercase tracking-[0.2em] animate-pulse text-center px-4">Analytics Engine Active</p>
-                        </div>
+                            ))
+                        )}
                     </div>
                 </div>
+
+                {/* 5. Performance - Analytics Card (Compartido o debajo) */}
+                {/* ... existing code or similar ... */}
             </div>
         </div>
     );

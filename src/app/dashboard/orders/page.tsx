@@ -16,5 +16,12 @@ export default async function OrdersPage() {
         },
     });
 
-    return <OrdersBoard initialOrders={orders as any} role={role} />;
+    // Serializar Decimal a number para evitar error de Client Component
+    const serializedOrders = orders.map(order => ({
+        ...order,
+        laborCost: order.laborCost ? Number(order.laborCost) : 0,
+        totalCost: order.totalCost ? Number(order.totalCost) : 0,
+    }));
+
+    return <OrdersBoard initialOrders={serializedOrders as any} role={role} />;
 }
